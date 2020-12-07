@@ -5,38 +5,46 @@ using System.Text;
 using System.Threading.Tasks;
 using SystemClock;
 
-namespace CPU
+namespace CPU.i8088.ExecutionUnit
 {
     public partial class ExecutionUnit
     {
         private readonly MainTimer mainTimer = MainTimer.GetInstance();
-        private event EventHandler tick;
+        private readonly GeneralRegisters registers = new GeneralRegisters();
 
+        
+        #region opcode_byte
+        //refactor changes:
+        // 'opcode' is now synonymous with 'Opcode', it is no longer the upper 6 bits
+        // get no longer constructs the byte by OR'ing multiple values
+        // set still alters 'direction' and 'width' but directly assigns 'opcode'
         private byte opcode = 0;
 
         // true = to xxx register
         // false = from xxx register
         private bool direction = false;
         private bool width = false;
-
+        
+        //TODO: should Opcode be accessible publicly?
+        /// <summary>
+        /// Opcode is one byte representing an 8086 instruction opcode or prefix
+        /// </summary>
         public byte Opcode
         {
             get
             {
-                byte result = 0;
-                result |= (byte)(opcode << 2);
-                result |= direction ? 2 : 0;
-                result |= width ? 1 : 0;
-                return result;
+                return opcode;
             }
-            set
+            private set
             {
                 width = (value & 1) != 0;
                 direction = (value & 2) != 0;
-                opcode = (byte)((value & 0b11111100) >> 2);
+                opcode = value;
             }
         }
+        #endregion
 
+        #region modrm_byte
         private byte mod = 0;
         private byte reg = 0;
         private byte rm = 0;
@@ -58,8 +66,9 @@ namespace CPU
                 rm =  (byte) (value & 0b00000111);
             }
         }
+        #endregion
 
-        private byte dataByteLow = 0;
+        private byte dataByteLow = 0; 
         private byte dataByteHigh = 0;
         private byte addressLow = 0;
         private byte addressHigh = 0;
@@ -70,13 +79,9 @@ namespace CPU
         private readonly RegisterSet registers;
         private readonly BusInterfaceUnit busInterfaceUnit;
 
-        public ExecutionUnit(RegisterSet registers, BusInterfaceUnit busInterfaceUnit)
+        public ExecutionUnit()
         {
-            this.registers = registers;
-            this.busInterfaceUnit = busInterfaceUnit;
-            initialize_instruction_set();
-            mainTimer.TockEvent += on_tick;
-            tick += fetch_opcode;
+            
         }
 
         private void on_tick(object sender, EventArgs e)

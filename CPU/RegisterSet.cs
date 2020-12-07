@@ -185,6 +185,7 @@ namespace CPU
         #endregion
 
         // Segment registers
+        //TODO: -> BIU
         #region SEGMENT
         private ushort cs = 0;
 
@@ -225,6 +226,7 @@ namespace CPU
         //TODO: the (what was i going to write here?????)
         private ushort ip = 0;
 
+        //TODO: -> BIU
         public ushort IP
         {
             get => ip;

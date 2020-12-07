@@ -42,8 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusInterfaceUnit.cs" />
+    <Compile Include="i8088\ExecutionUnit\GeneralRegisters.cs" />
     <Compile Include="FlagRegister.cs" />
-    <Compile Include="ExecutionUnit.cs" />
+    <Compile Include="i8088\ExecutionUnit\ExecutionUnit.cs" />
     <Compile Include="InstructionHelpers.cs" />
     <Compile Include="Instructions.cs" />
     <Compile Include="Intel8088.cs" />
