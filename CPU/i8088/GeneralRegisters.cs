@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CPU.i8088.ExecutionUnit
+namespace CPU.i8088
 {
-    public partial class ExecutionUnit
+    public partial class Processor
     {
         #region enumerations
         public enum WordGeneral

@@ -127,7 +127,7 @@ namespace CPU
             instructionSet[0x3c] = null; // cmp     imm8                            [false]
             instructionSet[0x3d] = null; // cmp     imm16                           [false]
 
-            instructionSet[0x3e] = null; // (segment override - cs)
+            instructionSet[0x3e] = null; // (segment override - ds)
             instructionSet[0x3f] = null; // aas
 
             instructionSet[0x40] = null; // inc ax

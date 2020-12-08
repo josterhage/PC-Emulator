@@ -221,7 +221,7 @@ namespace CPU
         #endregion
 
         // Flags
-        public readonly FlagRegister Flags = new FlagRegister();
+        public readonly Flags Flags = new Flags();
 
         //TODO: the (what was i going to write here?????)
         private ushort ip = 0;
