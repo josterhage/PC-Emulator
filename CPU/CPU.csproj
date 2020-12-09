@@ -42,39 +42,38 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusInterfaceUnit.cs" />
-    <Compile Include="i8088\FlagRegister.cs" />
+    <Compile Include="i8088\BIU-SegmentRegisters.cs" />
+    <Compile Include="i8088\BusInterfaceUnit.cs" />
+    <Compile Include="i8088\EU-FlagRegister.cs" />
     <Compile Include="i8088\ExecutionUnit.cs" />
-    <Compile Include="i8088\GeneralRegisters.cs" />
-    <Compile Include="i8088\InstructionSet-0x00-0x0F.cs" />
-    <Compile Include="i8088\InstructionSet-0x10-0x1F.cs" />
-    <Compile Include="i8088\InstructionSet-0x20-0x2F.cs" />
-    <Compile Include="i8088\InstructionSet-0x30-0x3F.cs" />
-    <Compile Include="i8088\InstructionSet-0x40-0x4F.cs" />
-    <Compile Include="i8088\InstructionSet-0x70-0x7F.cs" />
-    <Compile Include="i8088\InstructionSet-0x80-0x8F.cs" />
-    <Compile Include="i8088\InstructionSet-0x90-0x9F.cs" />
-    <Compile Include="i8088\InstructionSet-0xA0-0xAF.cs" />
-    <Compile Include="i8088\InstructionSet-0xB0-0xBF.cs" />
-    <Compile Include="i8088\InstructionSet-0xC0-0xCF.cs" />
-    <Compile Include="i8088\InstructionSet-0xD0-0xDF.cs" />
-    <Compile Include="i8088\InstructionSet-0xE0-0xEF.cs" />
-    <Compile Include="i8088\InstructionSet-0xF0-0xFF.cs" />
-    <Compile Include="i8088\InstructionSet-List.cs" />
-    <Compile Include="i8088\InstructionSet-0x50-0x5F.cs" />
+    <Compile Include="i8088\EU-GeneralRegisters.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x00-0x0F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x10-0x1F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x20-0x2F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x30-0x3F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x40-0x4F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x70-0x7F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x80-0x8F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x90-0x9F.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xA0-0xAF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xB0-0xBF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xC0-0xCF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xD0-0xDF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xE0-0xEF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0xF0-0xFF.cs" />
+    <Compile Include="i8088\EU-InstructionSet-Enumerations.cs" />
+    <Compile Include="i8088\EU-InstructionSet-HelperMethods.cs" />
+    <Compile Include="i8088\EU-InstructionSet-List.cs" />
+    <Compile Include="i8088\EU-InstructionSet-0x50-0x5F.cs" />
     <Compile Include="i8088\Processor.cs" />
-    <Compile Include="i8088\TemporaryRegisters.cs" />
+    <Compile Include="i8088\EU-TemporaryRegisters.cs" />
     <Compile Include="InstructionHelpers.cs" />
     <Compile Include="Instructions.cs" />
     <Compile Include="Intel8088.cs" />
     <Compile Include="Oscillator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterSet.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SystemClock\SystemClock.csproj">
-      <Project>{17ad0b18-f087-437a-bf5f-438a93eb9d15}</Project>
-      <Name>SystemClock</Name>
-    </ProjectReference>
+    <Compile Include="SystemClock\MainTimer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

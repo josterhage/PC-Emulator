@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using SystemClock;
+using CPU.SystemClock;
 
 namespace CPU.i8088
 {
@@ -11,96 +12,46 @@ namespace CPU.i8088
     {
         private partial class ExecutionUnit
         {
+            //TODO: does the execution unit need timer access? its operation is asynchronous by nature: it gets data from the queue one byte at a time, works on it, and blocks when no new data is available
             private readonly MainTimer mainTimer = MainTimer.GetInstance();
+            //necessary
+            private readonly BusInterfaceUnit busInterfaceUnit;
+
+
             private readonly GeneralRegisters registers = new GeneralRegisters();
             private readonly FlagRegister flags = new FlagRegister();
 
+            private readonly Thread executionUnitThread;
 
-            #region opcode_byte
-            //refactor changes:
-            // 'opcode' is now synonymous with 'Opcode', it is no longer the upper 6 bits
-            // get no longer constructs the byte by OR'ing multiple values
-            // set still alters 'direction' and 'width' but directly assigns 'opcode'
-            private byte opcode = 0;
-
-            // true = to xxx register
-            // false = from xxx register
-            private bool direction = false;
-            private bool width = false;
-
-            //TODO: should Opcode be accessible publicly?
-            /// <summary>
-            /// Opcode is one byte representing an 8086 instruction opcode or prefix
-            /// </summary>
-            public byte Opcode
-            {
-                get
-                {
-                    return opcode;
-                }
-                private set
-                {
-                    width = (value & 1) != 0;
-                    direction = (value & 2) != 0;
-                    opcode = value;
-                }
-            }
-            #endregion
-
-            #region modrm_byte
-            private byte mod = 0;
-            private byte reg = 0;
-            private byte rm = 0;
-
-            public byte ModRM
-            {
-                get
-                {
-                    byte result = 0;
-                    result |= (byte)(mod << 6);
-                    result |= (byte)(reg << 3);
-                    result |= rm;
-                    return result;
-                }
-                set
-                {
-                    mod = (byte)((value & 0b11000000) >> 6);
-                    reg = (byte)((value & 0b00111000) >> 3);
-                    rm = (byte)(value & 0b00000111);
-                }
-            }
-            #endregion
-
-            private byte dataByteLow = 0;
-            private byte dataByteHigh = 0;
-            private byte addressLow = 0;
-            private byte addressHigh = 0;
-
-            private byte tempByte = 0;
-            private ushort tempWord = 0;
-
-            private readonly BusInterfaceUnit busInterfaceUnit;
+            private bool isRunning = true;
 
             public ExecutionUnit()
             {
+                executionUnitThread = new Thread(new ThreadStart(run));
             }
 
-            private class Instruction
+            public void Run()
             {
-                private static Action[] instructions =
-                {
-                    mov_reg_mem
-                };
-
-                public Action this[byte b]
-                {
-                    get => instructions[b];
-                }
-
-                private static void mov_reg_mem() { }
+                executionUnitThread.Start();
             }
 
-            
+            public void End()
+            {
+                isRunning = false;
+            }
+
+            /// <summary>
+            /// Fetches the next byte from the queue then executes it
+            /// </summary>
+            private void run()
+            {
+                while (isRunning)
+                {
+                    fetch_next_from_queue();
+                    instructions[tempBL]?.Invoke();
+                }
+            }
+
         }
     }
 }

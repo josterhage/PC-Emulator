@@ -4,7 +4,6 @@ namespace CPU.i8088
 {
     public partial class Processor
     {
-        //TODO: after testing make this 'internal'
         //TODO: make exception messages meaningful
         private class FlagRegister
         {
