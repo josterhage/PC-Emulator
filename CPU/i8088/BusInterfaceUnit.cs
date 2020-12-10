@@ -10,28 +10,33 @@ namespace CPU.i8088
 {
     public partial class Processor
     {
+#if DEBUG
+        public partial class BusInterfaceUnit
+#else
         private partial class BusInterfaceUnit
+#endif
         {
             private readonly MainTimer mainTimer = MainTimer.GetInstance();
 
-            private event EventHandler TockEvent;
+            // Do I need a subscribable handler?
+            //private event EventHandler TockEvent;
 
 #if DEBUG
             private byte[] memory = new byte[0x100000];
 #endif
 
-            private SegmentRegisters segments = new SegmentRegisters();
+            private readonly SegmentRegisters segments = new SegmentRegisters();
             private ushort IP = 0;
 
             private Segment workingSegment;
             private ushort workingOffset = 0;
+
             private byte tempLow = 0;
             private byte tempHigh = 0;
 
-            private ushort readRequest = 0;
-            private Tuple<ushort,byte> writeRequest = new Tuple<ushort,byte>(0,0);
+            private bool HandlingInterrupt = false;
 
-            private ushort temp
+            private ushort Temp
             {
                 get
                 {
@@ -44,7 +49,7 @@ namespace CPU.i8088
                 }
             }
 
-            private Action onBusCycleComplete;
+            //private Action onBusCycleComplete;
 
             private readonly Queue<byte> InstructionQueue = new Queue<byte>(6);
 
@@ -76,9 +81,7 @@ namespace CPU.i8088
             }
             #endregion
 
-            private ReadCycle readCycle = ReadCycle.none;
-
-            private WriteCycle writeCycle = WriteCycle.none;
+            private TState tState = TState.none;
 
             private enum BusState
             {
@@ -92,32 +95,117 @@ namespace CPU.i8088
                 passive
             }
 
-            private enum ReadCycle
+            private enum TState
             {
                 none,
-                addressOut,
-                statusOut,
-                dataIn,
-                clear
-            }
-
-            private enum WriteCycle
-            {
-                none,
-                addressOut,
-                statusOutDataOut1,
-                statusOutDataOut2,
-                clear
+                address,
+                status,
+                data,
+                clear,
+                wait
             }
 
             public BusInterfaceUnit()
             {
-                mainTimer.TockEvent += OnTockEvent;
+                mainTimer.TockEvent += on_tock_event;
+                workingSegment = Segment.CS;
                 s02 = BusState.instructionFetch;
             }
 
-            public void OnTockEvent(object sender, EventArgs e)
+            public byte GetNextFromQueue()
             {
+                while (InstructionQueue.Count == 0) ;
+
+                return InstructionQueue.Dequeue();
+            }
+
+            public byte GetByte(byte segment, ushort offset)
+            {
+                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
+
+                workingSegment = (Segment)segment;
+
+                workingOffset = offset;
+
+                s02 = BusState.readMemory;
+
+                while (tempLow == 0) ;
+
+                byte result = tempLow;
+
+                while (tState != TState.clear) ;
+
+                s02 = BusState.passive;
+
+                return result;
+            }
+
+            public ushort GetWord(byte segment, ushort offset)
+            {
+                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
+
+                workingSegment = (Segment)segment;
+
+                workingOffset = offset;
+
+                s02 = BusState.readMemory;
+
+                while (tempLow == 0) ;
+
+                ushort result = tempLow;
+
+                while (tempHigh == 0) ;
+
+                result |= (ushort)(tempHigh << 8);
+
+                while (tState != TState.clear) ;
+
+                s02 = BusState.passive;
+
+                return result;
+            }
+
+            public void SetByte(byte segment, ushort offset, byte value)
+            {
+                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
+
+                workingSegment = (Segment)segment;
+
+                workingOffset = offset;
+
+                tempLow = value;
+
+                s02 = BusState.writeMemory;
+
+                while (tState != TState.clear) ;
+
+                s02 = BusState.passive;
+            }
+
+            public void SetWord(byte segment, ushort offset, ushort value)
+            {
+                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
+
+                workingSegment = (Segment)segment;
+
+                workingOffset = offset;
+
+                tempLow = (byte)(value & 0xFF);
+
+                s02 = BusState.writeMemory;
+
+                while (tState != TState.clear) ;
+
+                tempLow = (byte)((value & 0xFF00) >> 8);
+
+                while (tState != TState.clear && tempLow != 0) ;
+
+                s02 = BusState.passive;
+            }
+
+            private void on_tock_event(object sender, EventArgs e)
+            {
+                //this should be set NLT T4 on each read/write cycle
                 switch (s02)
                 {
                     case BusState.interruptAcknowledge:
@@ -130,11 +218,13 @@ namespace CPU.i8088
                         throw new NotImplementedException();
                     case BusState.instructionFetch:
                         get_instruction();
-                        throw new NotImplementedException();
+                        break;
                     case BusState.readMemory:
-                        throw new NotImplementedException();
+                        read_byte();
+                        break;
                     case BusState.writeMemory:
-                        throw new NotImplementedException();
+                        write_byte();
+                        break;
                     case BusState.passive:
                         throw new NotImplementedException();
                     default:
@@ -144,57 +234,92 @@ namespace CPU.i8088
 
             private void get_instruction()
             {
-                workingSegment = Segment.CS;
-                workingOffset = IP;
-                onBusCycleComplete += got_instruction_handler;
-            }
-
-            private void got_instruction_handler()
-            {
-                InstructionQueue.Enqueue(tempLow);
-                IP++;
-                if (InstructionQueue.Count == 6)
+                if (tState == TState.none)
                 {
-                    s02 = BusState.passive;
+                    workingSegment = Segment.CS;
+                    workingOffset = IP;
                 }
-                onBusCycleComplete -= got_instruction_handler;
+                else if (tState == TState.clear)
+                {
+                    InstructionQueue.Enqueue(tempLow);
+                    IP++;
+
+                    if (InstructionQueue.Count == 6 && s02 == BusState.instructionFetch)
+                    {
+                        s02 = BusState.passive;
+                    }
+                }
+                read_byte();
             }
 
             private void read_byte()
             {
                 //These indicate which cycle just finished, not which cycle we're starting
-                switch (readCycle)
+                switch (tState)
                 {
-                    case ReadCycle.none:
+                    case TState.none:
                         //TODO: put address on bus;
-                        readCycle = ReadCycle.addressOut;
+                        tState = TState.address;
                         break;
-                    case ReadCycle.addressOut:
+                    case TState.address:
                         //A16-A19 become S3-S6
                         //AD0-AD7 clear
-                        readCycle = ReadCycle.statusOut;
+                        tState = TState.status;
                         break;
-                    case ReadCycle.statusOut:
+                    case TState.status:
                         //no change?
-                        readCycle = ReadCycle.dataIn;
+                        tState = TState.data;
                         break;
-                    case ReadCycle.dataIn:
+                    case TState.data:
 #if DEBUG
                         tempLow = memory[segments[workingSegment] + workingOffset];
 #endif
-                        readCycle = ReadCycle.clear;
+                        tState = TState.clear;
                         break;
-                    case ReadCycle.clear:
-                        onBusCycleComplete.Invoke();
+                    case TState.wait:
+                        // does the BIU need to do anything here? ensure that a pin is set or something?
+                        break;
+                    case TState.clear:
+                        //onBusCycleComplete.Invoke();
                         zeroize();
-                        readCycle = ReadCycle.none;
+                        tState = TState.none;
+                        break;
+                }
+            }
+
+            private void write_byte()
+            {
+                switch (tState)
+                {
+                    case TState.none:
+                        tState = TState.address;
+                        break;
+                    case TState.address:
+                        tState = TState.status;
+                        break;
+                    case TState.status:
+                        tState = TState.data;
+                        break;
+                    case TState.data:
+                        tState = TState.clear;
+#if DEBUG
+                        memory[segments[workingSegment] + workingOffset] = tempLow;
+#endif
+                        break;
+                    case TState.wait:
+                        break;
+                    case TState.clear:
+                        zeroize();
+                        tState = TState.none;
                         break;
                 }
             }
 
             private void zeroize()
             {
-
+                workingOffset = 0;
+                workingSegment = Segment.none;
+                Temp = 0;
             }
 
 #if DEBUG

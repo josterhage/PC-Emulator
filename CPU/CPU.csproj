@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BusInterfaceUnit.cs" />
     <Compile Include="i8088\BIU-SegmentRegisters.cs" />
     <Compile Include="i8088\BusInterfaceUnit.cs" />
     <Compile Include="i8088\EU-FlagRegister.cs" />
@@ -67,12 +66,7 @@
     <Compile Include="i8088\EU-InstructionSet-0x50-0x5F.cs" />
     <Compile Include="i8088\Processor.cs" />
     <Compile Include="i8088\EU-TemporaryRegisters.cs" />
-    <Compile Include="InstructionHelpers.cs" />
-    <Compile Include="Instructions.cs" />
-    <Compile Include="Intel8088.cs" />
-    <Compile Include="Oscillator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RegisterSet.cs" />
     <Compile Include="SystemClock\MainTimer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

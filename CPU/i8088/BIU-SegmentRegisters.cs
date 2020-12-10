@@ -8,11 +8,15 @@ namespace CPU.i8088
 {
     public partial class Processor
     {
+#if DEBUG
+        public partial class BusInterfaceUnit
+#else
         private partial class BusInterfaceUnit
+#endif
         {
             private enum Segment
             {
-                ES,CS,SS,DS
+                ES, CS, SS, DS, none = 99
             }
             private class SegmentRegisters
             {
@@ -62,5 +66,5 @@ namespace CPU.i8088
                 }
             }
         }
-|}
+    }
 }

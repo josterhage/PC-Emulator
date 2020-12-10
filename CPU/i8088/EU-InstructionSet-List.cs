@@ -24,27 +24,6 @@ namespace CPU.i8088
         {
             private Action[] instructions;
 
-            private readonly bool[] needModRm =
-            {
-                    //   0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
-                true, true, true, true, false,false,false,false,true, true, true, true, false,false,false,false, // 0x00 - 0x0f
-                true, true, true, true, false,false,false,false,true, true, true, true, false,false,false,false, // 0x10 - 0x1f
-                true, true, true, true, false,false,false,false,true, true, true, true, false,false,false,false, // 0x20 - 0x2f
-                true, true, true, true, false,false,false,false,true, true, true, true, false,false,false,false, // 0x30 - 0x3f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0x40 - 0x4f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0x50 - 0x5f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0x60 - 0x6f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0x70 - 0x7f
-                true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,  // 0x80 - 0x8f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0x90 - 0x9f
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0xa0 - 0xaf
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0xb0 - 0xbf
-                false,false,false,false,true, true, true, true, false,false,false,false,false,false,false,false, // 0xc0 - 0xcf
-                true, true, true, true, false,false,false,false,true, true, true, true, true, true, true, true,  // 0xd0 - 0xdf
-                false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false, // 0xe0 - 0xef
-                false,false,false,false,false,false,true, true, false,false,false,false,false,true, false,false  // 0xf0 - 0xff
-                };
-
             public void InitializeInstructionSet()
             {
                 instructions = new Action[]
@@ -399,11 +378,6 @@ namespace CPU.i8088
                         //101 - jmp (far indirect), 110 - push mem16, 111 - nc
                         oxff            // 0xff
                 };
-            }
-
-            public Tuple<Action, bool> this[int i]
-            {
-                get => new Tuple<Action, bool>(instructions[i], needModRm[i]);
             }
         }
     }

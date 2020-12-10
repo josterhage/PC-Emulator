@@ -99,7 +99,7 @@ namespace CPU.i8088
             /// </remarks>
             private void fetch_next_from_queue()
             {
-                throw new NotImplementedException();
+                tempBL = busInterfaceUnit.GetNextFromQueue();
             }
 
             /// <summary>
@@ -108,7 +108,7 @@ namespace CPU.i8088
             /// </summary>
             private void byte_to_memory()
             {
-                throw new NotImplementedException();
+                busInterfaceUnit.SetByte(tempBL, TempC, tempAL);
             }
 
             /// <summary>
@@ -117,7 +117,7 @@ namespace CPU.i8088
             /// </summary>
             private void word_to_memory()
             {
-                throw new NotImplementedException();
+                busInterfaceUnit.SetWord(tempBL, TempC, TempA);
             }
 
             /// <summary>
@@ -126,7 +126,7 @@ namespace CPU.i8088
             /// </summary>
             private void byte_from_memory()
             {
-                throw new NotImplementedException();
+                tempAL = busInterfaceUnit.GetByte(tempBL, TempC);
             }
 
             /// <summary>
@@ -135,7 +135,7 @@ namespace CPU.i8088
             /// </summary>
             private void word_from_memory()
             {
-                throw new NotImplementedException();
+                TempA = busInterfaceUnit.GetByte(tempBL, TempC);
             }
 
             /// <summary>

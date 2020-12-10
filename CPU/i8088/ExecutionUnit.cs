@@ -25,8 +25,10 @@ namespace CPU.i8088
 
             private bool isRunning = true;
 
-            public ExecutionUnit()
+            public ExecutionUnit(BusInterfaceUnit busInterfaceUnit)
             {
+                this.busInterfaceUnit = busInterfaceUnit;
+                InitializeInstructionSet();
                 executionUnitThread = new Thread(new ThreadStart(run));
             }
 
@@ -47,8 +49,9 @@ namespace CPU.i8088
             {
                 while (isRunning)
                 {
-                    fetch_next_from_queue();
+                    tempBL = busInterfaceUnit.GetNextFromQueue();
                     instructions[tempBL]?.Invoke();
+                    zeroizeTemps();
                 }
             }
 

@@ -10,6 +10,12 @@ namespace CPU.i8088
     {
         private partial class ExecutionUnit
         {
+            private void zeroizeTemps()
+            {
+                TempA = 0;
+                TempB = 0;
+                TempC = 0;
+            }
 
             private byte tempAL =0;
             private byte tempAH =0;

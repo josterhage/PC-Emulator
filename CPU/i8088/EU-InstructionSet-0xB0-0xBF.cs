@@ -8,7 +8,8 @@ namespace CPU.i8088
         {
             private void mov_al_i8()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                registers.AL = tempBL;
             }
 
             private void mov_cl_i8()
