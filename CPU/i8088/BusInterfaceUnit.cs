@@ -119,15 +119,23 @@ namespace CPU.i8088
                 return InstructionQueue.Dequeue();
             }
 
-            public byte GetByte(byte segment, ushort offset)
+            public byte GetByte(Segment segment, ushort offset)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
 
-                workingSegment = (Segment)segment;
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                zeroize();
+
+                workingSegment = segment;
 
                 workingOffset = offset;
 
                 s02 = BusState.readMemory;
+
+                mainTimer.TockEvent += on_tock_event;
 
                 while (tempLow == 0) ;
 
@@ -140,15 +148,23 @@ namespace CPU.i8088
                 return result;
             }
 
-            public ushort GetWord(byte segment, ushort offset)
+            public ushort GetWord(Segment segment, ushort offset)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
 
-                workingSegment = (Segment)segment;
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                zeroize();
+
+                workingSegment = segment;
 
                 workingOffset = offset;
 
                 s02 = BusState.readMemory;
+
+                mainTimer.TockEvent += on_tock_event;
 
                 while (tempLow == 0) ;
 
@@ -165,11 +181,17 @@ namespace CPU.i8088
                 return result;
             }
 
-            public void SetByte(byte segment, ushort offset, byte value)
+            public void SetByte(Segment segment, ushort offset, byte value)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
 
-                workingSegment = (Segment)segment;
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                zeroize(); 
+                
+                workingSegment = segment;
 
                 workingOffset = offset;
 
@@ -177,16 +199,26 @@ namespace CPU.i8088
 
                 s02 = BusState.writeMemory;
 
+                mainTimer.TockEvent += on_tock_event;
+
                 while (tState != TState.clear) ;
 
                 s02 = BusState.passive;
+
+                
             }
 
-            public void SetWord(byte segment, ushort offset, ushort value)
+            public void SetWord(Segment segment, ushort offset, ushort value)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
 
-                workingSegment = (Segment)segment;
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                zeroize();
+
+                workingSegment = segment;
 
                 workingOffset = offset;
 
@@ -196,11 +228,31 @@ namespace CPU.i8088
 
                 while (tState != TState.clear) ;
 
+                mainTimer.TockEvent -= on_tock_event;
+
                 tempLow = (byte)((value & 0xFF00) >> 8);
 
-                while (tState != TState.clear && tempLow != 0) ;
+                mainTimer.TockEvent += single_cycle_write_handler;
 
                 s02 = BusState.passive;
+
+                mainTimer.TockEvent += on_tock_event;
+            }
+
+            public void WriteSegmentToMemory(Segment segment, ushort offset, Segment segmentOverride = Segment.DS)
+            {
+                SetWord(segmentOverride, offset, segments[segment]);
+            }
+
+            public void SetSegment(Segment segment, ushort value)
+            {
+                segments[segment] = value;
+            }
+
+            private void single_cycle_write_handler(object sender, EventArgs e)
+            {
+                tState = TState.none;
+                mainTimer.TockEvent -= single_cycle_write_handler;
             }
 
             private void on_tock_event(object sender, EventArgs e)
@@ -226,7 +278,7 @@ namespace CPU.i8088
                         write_byte();
                         break;
                     case BusState.passive:
-                        throw new NotImplementedException();
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

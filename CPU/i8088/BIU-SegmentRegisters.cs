@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +14,11 @@ namespace CPU.i8088
         private partial class BusInterfaceUnit
 #endif
         {
-            private enum Segment
+            public enum Segment
             {
                 ES, CS, SS, DS, none = 99
             }
+
             private class SegmentRegisters
             {
                 public ushort ES = 0;

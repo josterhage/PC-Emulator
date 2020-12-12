@@ -23,6 +23,8 @@ namespace CPU.i8088
 
             private readonly Thread executionUnitThread;
 
+            private BusInterfaceUnit.Segment overrideSegment = BusInterfaceUnit.Segment.DS;
+
             private bool isRunning = true;
 
             public ExecutionUnit(BusInterfaceUnit busInterfaceUnit)
@@ -52,6 +54,7 @@ namespace CPU.i8088
                     tempBL = busInterfaceUnit.GetNextFromQueue();
                     instructions[tempBL]?.Invoke();
                     zeroizeTemps();
+                    overrideSegment = BusInterfaceUnit.Segment.DS;
                 }
             }
 

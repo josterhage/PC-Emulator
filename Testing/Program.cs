@@ -23,8 +23,14 @@ namespace Testing
 
             biu.SetMemory(0, 0xb0);
             biu.SetMemory(1, 0x42);
+            biu.SetMemory(2, 0xb3);
+            biu.SetMemory(3, 0xbd);
+            biu.SetMemory(4, 0x00);
+            biu.SetMemory(5, 0xd8);
 
             cpu = new Processor(biu);
+
+            timer.TockEvent += (sender, e) => { Console.WriteLine($"{timer.TotalTicks}"); };
 
             while (ticks < 1000) ;
 

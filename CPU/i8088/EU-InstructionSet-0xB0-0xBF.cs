@@ -14,17 +14,20 @@ namespace CPU.i8088
 
             private void mov_cl_i8()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                registers.CL = tempBL;
             }
 
             private void mov_dl_i8()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                registers.DL = tempBL;
             }
 
             private void mov_bl_i8()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                registers.BL = tempBL;
             }
 
             private void mov_ah_i8()

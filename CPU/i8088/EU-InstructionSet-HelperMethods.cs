@@ -19,7 +19,7 @@ namespace CPU.i8088
             private void build_effective_address()
             {
                 ModEncoding mod = (ModEncoding)((tempBL & 0xC0) >> 6);
-                RmEncoding rm = (RmEncoding)((tempBL & 0x38) >> 3);
+                RmEncoding rm = (RmEncoding)(tempBL & 0x07);
 
                 switch (mod)
                 {
@@ -108,7 +108,7 @@ namespace CPU.i8088
             /// </summary>
             private void byte_to_memory()
             {
-                busInterfaceUnit.SetByte(tempBL, TempC, tempAL);
+                busInterfaceUnit.SetByte(overrideSegment, TempC, tempAL);
             }
 
             /// <summary>
@@ -117,7 +117,7 @@ namespace CPU.i8088
             /// </summary>
             private void word_to_memory()
             {
-                busInterfaceUnit.SetWord(tempBL, TempC, TempA);
+                busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
             }
 
             /// <summary>
@@ -126,7 +126,7 @@ namespace CPU.i8088
             /// </summary>
             private void byte_from_memory()
             {
-                tempAL = busInterfaceUnit.GetByte(tempBL, TempC);
+                tempAL = busInterfaceUnit.GetByte(overrideSegment, TempC);
             }
 
             /// <summary>
@@ -135,7 +135,7 @@ namespace CPU.i8088
             /// </summary>
             private void word_from_memory()
             {
-                TempA = busInterfaceUnit.GetByte(tempBL, TempC);
+                TempA = busInterfaceUnit.GetByte(overrideSegment, TempC);
             }
 
             /// <summary>

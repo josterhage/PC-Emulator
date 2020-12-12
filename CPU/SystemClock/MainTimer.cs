@@ -24,6 +24,8 @@ namespace CPU.SystemClock
 
         private readonly Stopwatch stopwatch;
 
+        public UInt64 TotalTicks { get; private set; } = 0;
+
         public event EventHandler TockEvent; // I'm trying to ... mostly comply with .NET guidelines.
         public event EventHandler TwoTockEvent;
         public event EventHandler FourTockEvent;
@@ -31,7 +33,7 @@ namespace CPU.SystemClock
         private MainTimer()
         {
 #if DEBUG
-            ticks = Stopwatch.Frequency / 2; // 2hz processor ftw
+            ticks = Stopwatch.Frequency / 10; // 2hz processor ftw
 #else
 
             if (Stopwatch.IsHighResolution)
@@ -69,6 +71,8 @@ namespace CPU.SystemClock
             EventHandler raiseEvent = TockEvent;
 
             raiseEvent?.Invoke(this, e);
+
+            TotalTicks++;
 
             tocks++;
             if (tocks == 2)
