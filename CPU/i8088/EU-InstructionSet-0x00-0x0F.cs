@@ -13,23 +13,21 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var src = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var dest = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] += registers[src];
+                    registers[destReg] = set_flags_and_sum(registers[srcReg], registers[destReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var src = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
 
-                    var destVal = busInterfaceUnit.GetByte(overrideSegment, TempC);
+                    byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    destVal += registers[src];
-
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, destVal);
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_sum(registers[srcReg], dest));
                 }
             }
 
@@ -38,22 +36,20 @@ namespace CPU.i8088
                 fetch_next_from_queue();
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
-                    var src = (WordGeneral)(tempBL & 0x07);
-                    var dest = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] += registers[src];
+                    registers[destReg] = set_flags_and_sum(registers[srcReg], registers[destReg]);
                 }
                 else
                 {
                     build_effective_address();
 
-                    var src = (WordGeneral)(tempBL & 0x07);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
 
-                    var destVal = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    destVal += registers[src];
-
-                    busInterfaceUnit.SetWord(overrideSegment, TempC, destVal);
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, set_flags_and_sum(registers[srcReg], dest));
                 }
             }
 
@@ -64,21 +60,24 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var dest = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var src = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] += registers[src];
+                    byte dest = registers[destReg];
+                    byte src = registers[srcReg];
+
+                    registers[destReg] = set_flags_and_sum(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var dest = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
 
-                    var srcVal = busInterfaceUnit.GetByte(overrideSegment, TempC);
+                    byte src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    registers[dest] += srcVal;
+                    registers[destReg] = set_flags_and_sum(registers[destReg], src);
                 }
             }
 
@@ -89,53 +88,48 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var dest = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var src = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] += registers[src];
+                    ushort src = registers[srcReg];
+
+                    registers[destReg] = set_flags_and_sum(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var dest = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
 
-                    var srcVal = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort src = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    registers[dest] += srcVal;
+                    registers[destReg] = set_flags_and_sum(registers[destReg], src);
                 }
             }
 
             private void add_al_i8()
             {
                 fetch_next_from_queue();
-                registers.AL += tempBL;
+                registers.AL = set_flags_and_sum(registers.AL, tempBL);
             }
 
             private void add_ax_i16()
             {
                 fetch_next_from_queue();
-                registers.AX += TempB;
+                registers.AX = set_flags_and_sum(registers.AX, TempB);
             }
 
             private void push_es()
             {
-                //write value of ES to SS:SP
-                busInterfaceUnit.WriteSegmentToMemory(BusInterfaceUnit.Segment.ES, registers.SP, BusInterfaceUnit.Segment.SS);
                 //decrement stack pointer by two (x86 stacks grow downward)
                 registers.SP -= 2;
+                //write value of ES to SS:SP
+                busInterfaceUnit.WriteSegmentToMemory(BusInterfaceUnit.Segment.ES, registers.SP, BusInterfaceUnit.Segment.SS);
             }
 
             private void pop_es()
             {
-                //STACK UNDERFLOW - if these are equal that means there is no data on the stack
-                //TODO: check what the 8086 does
-                //if(registers.SP == registers.BP)
-                //{
-                //    throw new InvalidOperationException();
-                //}
-
                 //read the value at SS:SP
                 TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
                 //tell the BIU to set ES
@@ -151,23 +145,21 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var src = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var dest = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] |= registers[src];
+                    registers[destReg] = set_flags_and_or(registers[srcReg], registers[destReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var src = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
 
-                    var destVal = busInterfaceUnit.GetByte(overrideSegment, TempC);
+                    byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    destVal |= registers[src];
-
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, destVal);
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_or(registers[srcReg], dest));
                 }
             }
 
@@ -176,22 +168,20 @@ namespace CPU.i8088
                 fetch_next_from_queue();
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
-                    var src = (WordGeneral)(tempBL & 0x07);
-                    var dest = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] |= registers[src];
+                    registers[destReg] = set_flags_and_or(registers[srcReg], registers[destReg]);
                 }
                 else
                 {
                     build_effective_address();
 
-                    var src = (WordGeneral)(tempBL & 0x07);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
 
-                    var destVal = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    var dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    destVal |= registers[src];
-
-                    busInterfaceUnit.SetWord(overrideSegment, TempC, destVal);
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, set_flags_and_or(registers[srcReg], dest));
                 }
             }
 
@@ -202,21 +192,21 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var dest = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var src = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] |= registers[src];
+                    registers[destReg] = set_flags_and_or(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var dest = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
 
-                    var srcVal = busInterfaceUnit.GetByte(overrideSegment, TempC);
+                    var src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    registers[dest] |= srcVal;
+                    registers[destReg] = set_flags_and_or(registers[destReg], src);
                 }
             }
 
@@ -227,54 +217,47 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var dest = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
                     // and bits 0-2 encode the dest
-                    var src = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    registers[dest] |= registers[src];
+                    registers[destReg] = set_flags_and_or(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
                     //load the address
                     build_effective_address();
-                    var dest = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
 
-                    var srcVal = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    var src = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    registers[dest] |= srcVal;
+                    registers[destReg] = set_flags_and_or(registers[destReg], src);
                 }
             }
 
             private void or_al_i8()
             {
                 fetch_next_from_queue();
-                registers.AL |= tempBL;
+                registers.AL = set_flags_and_or(registers.AL, tempBL);
             }
 
             private void or_ax_i16()
             {
                 fetch_next_from_queue();
-                registers.AX |= TempB;
+                registers.AX = set_flags_and_or(registers.AX, TempB);
             }
 
             private void push_cs()
             {
-                //write value of CS to SS:SP
-                busInterfaceUnit.WriteSegmentToMemory(BusInterfaceUnit.Segment.CS, registers.SP, BusInterfaceUnit.Segment.SS);
                 //decrement stack pointer by two (x86 stacks grow downward)
                 registers.SP -= 2;
+                //write value of CS to SS:SP
+                busInterfaceUnit.WriteSegmentToMemory(BusInterfaceUnit.Segment.CS, registers.SP, BusInterfaceUnit.Segment.SS);
             }
 
 #if FULLFEATURE
             private void pop_cs()
             {
-                //STACK UNDERFLOW - if these are equal that means there is no data on the stack
-                //TODO: check what the 8086 does
-                //if(registers.SP == registers.BP)
-                //{
-                //    throw new InvalidOperationException();
-                //}
-
                 //read the value at SS:SP
                 TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
                 //tell the BIU to set ES

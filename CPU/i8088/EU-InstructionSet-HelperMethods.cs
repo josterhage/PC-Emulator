@@ -161,6 +161,95 @@ namespace CPU.i8088
             {
                 throw new NotImplementedException();
             }
+
+            private void set_sign(byte value)
+            {
+                flags.SF = (value & 128) != 0;
+            }
+
+            private void set_sign(ushort value)
+            {
+                flags.SF = (value & 32768) != 0;
+            }
+
+            private void set_parity(byte value)
+            {
+                flags.PF = true;
+                for (int i = 0; i < 8; i++)
+                {
+                    flags.PF ^= (value & (1 << i)) != 0;
+                }
+            }
+
+            private void set_parity(ushort value)
+            {
+                flags.PF = true;
+                for (int i = 0; i < 16; i++)
+                {
+                    flags.PF ^= (value & (1 << i)) != 0;
+                }
+            }
+
+            private byte set_flags_and_sum(byte left, byte right)
+            {
+                ushort sum = (ushort)(left + right);
+
+                flags.AF = sum >= 0x80;
+
+                if(sum > 0xff)
+                {
+                    flags.CF = true;
+                    sum >>= 8;
+                }
+                flags.OF = ((left < 0x80) || (right < 0x80)) && (sum >= 0x80);
+                flags.ZF = sum == 0;
+                set_sign((byte)sum);
+                set_parity((byte)sum);
+                return (byte)sum;
+            }
+
+            private ushort set_flags_and_sum(ushort left, ushort right)
+            {
+                uint sum = (uint)(left + right);
+
+                flags.AF = sum > 0x8000;
+
+                if(sum > 0xfff)
+                {
+                    flags.CF = true;
+                    sum >>= 16;
+                }
+
+                flags.OF = ((left < 0x8000) || (right < 0x8000)) && (sum >= 0x8000);
+                flags.ZF = sum == 0;
+                set_sign((ushort)sum);
+                set_parity((ushort)sum);
+                return (ushort)sum;
+            }
+
+            private byte set_flags_and_or(byte left, byte right)
+            {
+                byte result = (byte)(left | right);
+                flags.OF = false;
+                flags.CF = false;
+                flags.ZF = result == 0;
+                set_sign(result);
+                set_parity(result);
+
+                return result;
+            }
+
+            private ushort set_flags_and_or(ushort left, ushort right)
+            {
+                ushort result = (ushort)(left | right);
+                flags.OF = false;
+                flags.CF = false;
+                flags.ZF = result == 0;
+                set_sign(result);
+                set_parity(result);
+
+                return result;
+            }
         }
     }
 }
