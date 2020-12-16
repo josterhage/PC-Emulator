@@ -57,29 +57,39 @@ namespace CPU.i8088
             private void mov_ax_i16()
             {
                 fetch_next_from_queue();
-                registers.AX = TempB;
+                registers.AL = tempBL;
+                fetch_next_from_queue();
+                registers.AH = tempBL;
             }
 
             private void mov_cx_i16()
             {
                 fetch_next_from_queue();
-                registers.CX = TempB;
+                registers.CL = tempBL;
+                fetch_next_from_queue();
+                registers.CH = tempBL;
             }
 
             private void mov_dx_i16()
             {
                 fetch_next_from_queue();
-                registers.DX = TempB;
+                registers.DL = tempBL;
+                fetch_next_from_queue();
+                registers.DH = tempBL;
             }
 
             private void mov_bx_i16()
             {
                 fetch_next_from_queue();
-                registers.BX = TempB;
+                registers.BL = tempBL;
+                fetch_next_from_queue();
+                registers.BH = tempBL;
             }
 
             private void mov_sp_i16()
             {
+                fetch_next_from_queue();
+                tempBH = tempBL;
                 fetch_next_from_queue();
                 registers.SP = TempB;
             }
@@ -87,17 +97,23 @@ namespace CPU.i8088
             private void mov_bp_i16()
             {
                 fetch_next_from_queue();
+                tempBH = tempBL;
+                fetch_next_from_queue();
                 registers.BP = TempB;
             }
 
             private void mov_si_i16()
             {
                 fetch_next_from_queue();
+                tempBH = tempBL;
+                fetch_next_from_queue();
                 registers.SI = TempB;
             }
 
             private void mov_di_i16()
             {
+                fetch_next_from_queue();
+                tempBH = tempBL;
                 fetch_next_from_queue();
                 registers.DI = TempB;
             }

@@ -117,7 +117,7 @@ namespace CPU.i8088
             /// </summary>
             private void word_to_memory()
             {
-                busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
+                //busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
             }
 
             /// <summary>

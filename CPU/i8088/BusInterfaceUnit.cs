@@ -127,8 +127,6 @@ namespace CPU.i8088
 
                 tState = TState.none;
 
-                zeroize();
-
                 workingSegment = segment;
 
                 workingOffset = offset;
@@ -137,44 +135,9 @@ namespace CPU.i8088
 
                 mainTimer.TockEvent += on_tock_event;
 
-                while (tempLow == 0) ;
+                while (tState != TState.clear) ;
 
                 byte result = tempLow;
-
-                while (tState != TState.clear) ;
-
-                s02 = BusState.passive;
-
-                return result;
-            }
-
-            public ushort GetWord(Segment segment, ushort offset)
-            {
-                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
-
-                mainTimer.TockEvent -= on_tock_event;
-
-                tState = TState.none;
-
-                zeroize();
-
-                workingSegment = segment;
-
-                workingOffset = offset;
-
-                s02 = BusState.readMemory;
-
-                mainTimer.TockEvent += on_tock_event;
-
-                while (tempLow == 0) ;
-
-                ushort result = tempLow;
-
-                while (tempHigh == 0) ;
-
-                result |= (ushort)(tempHigh << 8);
-
-                while (tState != TState.clear) ;
 
                 s02 = BusState.passive;
 
@@ -189,8 +152,6 @@ namespace CPU.i8088
 
                 tState = TState.none;
 
-                zeroize(); 
-                
                 workingSegment = segment;
 
                 workingOffset = offset;
@@ -208,40 +169,10 @@ namespace CPU.i8088
                 
             }
 
-            public void SetWord(Segment segment, ushort offset, ushort value)
-            {
-                while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
-
-                mainTimer.TockEvent -= on_tock_event;
-
-                tState = TState.none;
-
-                zeroize();
-
-                workingSegment = segment;
-
-                workingOffset = offset;
-
-                tempLow = (byte)(value & 0xFF);
-
-                s02 = BusState.writeMemory;
-
-                while (tState != TState.clear) ;
-
-                mainTimer.TockEvent -= on_tock_event;
-
-                tempLow = (byte)((value & 0xFF00) >> 8);
-
-                mainTimer.TockEvent += single_cycle_write_handler;
-
-                s02 = BusState.passive;
-
-                mainTimer.TockEvent += on_tock_event;
-            }
-
             public void WriteSegmentToMemory(Segment segment, ushort offset, Segment segmentOverride = Segment.DS)
             {
-                SetWord(segmentOverride, offset, segments[segment]);
+                throw new NotImplementedException();
+                //SetWord(segmentOverride, offset, segments[segment]);
             }
 
             public void SetSegment(Segment segment, ushort value)
@@ -278,6 +209,9 @@ namespace CPU.i8088
                         write_byte();
                         break;
                     case BusState.passive:
+                        if (InstructionQueue.Count < 6)
+                            tState = TState.none;
+                            s02 = BusState.instructionFetch;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -333,7 +267,6 @@ namespace CPU.i8088
                         break;
                     case TState.clear:
                         //onBusCycleComplete.Invoke();
-                        zeroize();
                         tState = TState.none;
                         break;
                 }
@@ -361,17 +294,9 @@ namespace CPU.i8088
                     case TState.wait:
                         break;
                     case TState.clear:
-                        zeroize();
                         tState = TState.none;
                         break;
                 }
-            }
-
-            private void zeroize()
-            {
-                workingOffset = 0;
-                workingSegment = Segment.none;
-                Temp = 0;
             }
 
 #if DEBUG

@@ -13,9 +13,9 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var srcReg = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_sum(registers[srcReg], registers[destReg]);
                 }
@@ -23,7 +23,7 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var srcReg = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
@@ -36,8 +36,8 @@ namespace CPU.i8088
                 fetch_next_from_queue();
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
-                    var srcReg = (WordGeneral)(tempBL & 0x07);
-                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_sum(registers[srcReg], registers[destReg]);
                 }
@@ -45,11 +45,15 @@ namespace CPU.i8088
                 {
                     build_effective_address();
 
-                    var srcReg = (WordGeneral)(tempBL & 0x07);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort dest = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
+                    dest |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
 
-                    busInterfaceUnit.SetWord(overrideSegment, TempC, set_flags_and_sum(registers[srcReg], dest));
+                    TempA = set_flags_and_sum(registers[srcReg], dest);
+
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, tempAL);
+                    busInterfaceUnit.SetByte(overrideSegment, (ushort)(TempC + 1), tempAH);
                 }
             }
 
@@ -60,9 +64,9 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var destReg = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
 
                     byte dest = registers[destReg];
                     byte src = registers[srcReg];
@@ -73,7 +77,7 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var destReg = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
                     byte src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
@@ -88,9 +92,9 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var destReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
 
                     ushort src = registers[srcReg];
 
@@ -100,9 +104,11 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var destReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    ushort src = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort src = busInterfaceUnit.GetByte(overrideSegment, TempC);
+                    src |= (ushort)(busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1)) << 8);
+
 
                     registers[destReg] = set_flags_and_sum(registers[destReg], src);
                 }
@@ -131,7 +137,7 @@ namespace CPU.i8088
             private void pop_es()
             {
                 //read the value at SS:SP
-                TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                //TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
                 //tell the BIU to set ES
                 busInterfaceUnit.SetSegment(BusInterfaceUnit.Segment.ES, TempA);
                 //increment the stack pointer by two
@@ -145,9 +151,9 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var srcReg = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_or(registers[srcReg], registers[destReg]);
                 }
@@ -155,7 +161,7 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var srcReg = (ByteGeneral)(tempBL & 0x07);
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
@@ -168,8 +174,8 @@ namespace CPU.i8088
                 fetch_next_from_queue();
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
-                    var srcReg = (WordGeneral)(tempBL & 0x07);
-                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_or(registers[srcReg], registers[destReg]);
                 }
@@ -177,24 +183,27 @@ namespace CPU.i8088
                 {
                     build_effective_address();
 
-                    var srcReg = (WordGeneral)(tempBL & 0x07);
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    var dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort dest = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
+                    dest |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
 
-                    busInterfaceUnit.SetWord(overrideSegment, TempC, set_flags_and_or(registers[srcReg], dest));
+                    TempA = set_flags_and_or(registers[srcReg], dest);
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, tempAL);
+                    busInterfaceUnit.SetByte(overrideSegment, (ushort)(TempC + 1), tempAH);
                 }
             }
 
-            private void or_r8_rm16()
+            private void or_r8_rm8()
             {
                 fetch_next_from_queue();
                 //If bits 6/7 are high then the destination is a register
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var destReg = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (ByteGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_or(registers[destReg], registers[srcReg]);
                 }
@@ -202,7 +211,7 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var destReg = (ByteGeneral)(tempBL & 0x07);
+                    var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
                     var src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
@@ -217,9 +226,9 @@ namespace CPU.i8088
                 if ((ModEncoding)((tempBL & 0xC0) >> 6) == ModEncoding.registerRegister)
                 {
                     // in register-> register operations bits 3-5 of the ModRM byte encode the src
-                    var destReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
                     // and bits 0-2 encode the dest
-                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
 
                     registers[destReg] = set_flags_and_or(registers[destReg], registers[srcReg]);
                 }
@@ -227,9 +236,10 @@ namespace CPU.i8088
                 {
                     //load the address
                     build_effective_address();
-                    var destReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    var src = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                    ushort src = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
+                    src |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
 
                     registers[destReg] = set_flags_and_or(registers[destReg], src);
                 }

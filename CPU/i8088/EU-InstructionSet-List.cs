@@ -38,7 +38,7 @@ namespace CPU.i8088
                         pop_es,         // 0x07 pop es
                         or_rm8_r8,      // 0x08 or reg8/mem8 reg8
                         or_rm16_r16,    // 0x09 or reg16/mem16 reg16
-                        or_r8_rm16,     // 0x0a or reg8 reg8/mem8
+                        or_r8_rm8,     // 0x0a or reg8 reg8/mem8
                         or_r16_rm16,    // 0x0b or reg16 reg16/mem16
                         or_al_i8,       // 0x0c or al imm8
                         or_ax_i16,      // 0x0d or ax imm16
@@ -346,7 +346,7 @@ namespace CPU.i8088
                         lck,            // 0xf0 lock prefix
 
 #if FULLFEATURE
-		                lck,  
+                        lck,  
 #else	
                         null,           // 0xf1
 #endif
