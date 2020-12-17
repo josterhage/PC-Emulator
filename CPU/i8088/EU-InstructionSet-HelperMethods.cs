@@ -194,7 +194,7 @@ namespace CPU.i8088
             {
                 ushort sum = (ushort)(left + right);
 
-                flags.AF = sum >= 0x80;
+                flags.AF = sum >= 0xF;
 
                 if(sum > 0xff)
                 {
@@ -212,7 +212,7 @@ namespace CPU.i8088
             {
                 uint sum = (uint)(left + right);
 
-                flags.AF = sum > 0x8000;
+                flags.AF = sum > 0xF;
 
                 if(sum > 0xfff)
                 {

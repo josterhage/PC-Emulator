@@ -48,12 +48,40 @@ namespace CPU.i8088
 
             private void mov_rm8_r8()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if ((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                {
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (ByteGeneral)(tempBL & 0x07);
+
+                    registers[destReg] = registers[srcReg];
+                }
+                else
+                {
+                    build_effective_address();
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, registers[srcReg]);
+                }
             }
 
             private void mov_rm16_r16()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if ((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                {
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    var destReg = (WordGeneral)(tempBL & 0x07);
+
+                    registers[destReg] = registers[srcReg];
+                }
+                else
+                {
+                    build_effective_address();
+                    var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, registers[srcReg]);
+                }
             }
 
             private void mov_r8_rm8()

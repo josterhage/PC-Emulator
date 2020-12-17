@@ -144,6 +144,13 @@ namespace CPU.i8088
                 return result;
             }
 
+            public ushort GetWord(Segment segment, ushort offset)
+            {
+                ushort result = GetByte(segment, offset);
+                result |= GetByte(segment, (ushort)(offset + 1));
+                return result;
+            }
+
             public void SetByte(Segment segment, ushort offset, byte value)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
@@ -165,14 +172,17 @@ namespace CPU.i8088
                 while (tState != TState.clear) ;
 
                 s02 = BusState.passive;
+            }
 
-                
+            public void SetWord(Segment segment,ushort offset, ushort value)
+            {
+                SetByte(segment, offset, (byte)(value & 0xff));
+                SetByte(segment, (ushort)(offset + 1), (byte)((value & 0xff00) >> 8));
             }
 
             public void WriteSegmentToMemory(Segment segment, ushort offset, Segment segmentOverride = Segment.DS)
             {
-                throw new NotImplementedException();
-                //SetWord(segmentOverride, offset, segments[segment]);
+                SetWord(segmentOverride, offset, segments[segment]);
             }
 
             public void SetSegment(Segment segment, ushort value)

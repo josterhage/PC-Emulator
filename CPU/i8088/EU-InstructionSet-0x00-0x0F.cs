@@ -52,8 +52,7 @@ namespace CPU.i8088
 
                     TempA = set_flags_and_sum(registers[srcReg], dest);
 
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, tempAL);
-                    busInterfaceUnit.SetByte(overrideSegment, (ushort)(TempC + 1), tempAH);
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, TempC);
                 }
             }
 
@@ -106,9 +105,7 @@ namespace CPU.i8088
                     build_effective_address();
                     var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    ushort src = busInterfaceUnit.GetByte(overrideSegment, TempC);
-                    src |= (ushort)(busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1)) << 8);
-
+                    ushort src = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
                     registers[destReg] = set_flags_and_sum(registers[destReg], src);
                 }
@@ -185,12 +182,11 @@ namespace CPU.i8088
 
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    ushort dest = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
-                    dest |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
+                    ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
                     TempA = set_flags_and_or(registers[srcReg], dest);
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, tempAL);
-                    busInterfaceUnit.SetByte(overrideSegment, (ushort)(TempC + 1), tempAH);
+
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, set_flags_and_or(registers[srcReg], dest));
                 }
             }
 
