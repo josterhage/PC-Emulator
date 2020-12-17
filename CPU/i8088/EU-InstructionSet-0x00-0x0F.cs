@@ -47,12 +47,11 @@ namespace CPU.i8088
 
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
-                    ushort dest = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
-                    dest |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
+                    ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
                     TempA = set_flags_and_sum(registers[srcReg], dest);
 
-                    busInterfaceUnit.SetWord(overrideSegment, TempC, TempC);
+                    busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
                 }
             }
 

@@ -8,12 +8,16 @@ namespace CPU.i8088
         {
             private void mov_al_m8()
             {
-                throw new NotImplementedException();
+                build_effective_address();
+
+                registers.AL = busInterfaceUnit.GetByte(overrideSegment, TempC);
             }
 
             private void mov_ax_m16()
             {
-                throw new NotImplementedException();
+                build_effective_address();
+
+                registers.AX = busInterfaceUnit.GetWord(overrideSegment, TempC);
             }
 
             private void mov_m8_al()

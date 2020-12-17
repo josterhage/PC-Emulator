@@ -199,7 +199,7 @@ namespace CPU.i8088
                 if(sum > 0xff)
                 {
                     flags.CF = true;
-                    sum >>= 8;
+                    sum -= 256;
                 }
                 flags.OF = ((left < 0x80) || (right < 0x80)) && (sum >= 0x80);
                 flags.ZF = sum == 0;
@@ -214,10 +214,10 @@ namespace CPU.i8088
 
                 flags.AF = sum > 0xF;
 
-                if(sum > 0xfff)
+                if(sum > 0xffff)
                 {
                     flags.CF = true;
-                    sum >>= 16;
+                    sum -= 0x10000;
                 }
 
                 flags.OF = ((left < 0x8000) || (right < 0x8000)) && (sum >= 0x8000);

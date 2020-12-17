@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -313,6 +314,22 @@ namespace CPU.i8088
             public void SetMemory(ushort offset, byte value)
             {
                 memory[offset] = value;
+            }
+
+            public void FillFromFile(ushort offset, string path)
+            {
+                byte[] result;
+
+                using (FileStream sourceStream = File.Open(path, FileMode.Open))
+                {
+                    result = new byte[sourceStream.Length];
+                    sourceStream.Read(result, 0, (int)sourceStream.Length);
+                }
+
+                for(int i =0; i < result.Length; i++)
+                {
+                    memory[i + offset] = result[i];
+                }
             }
 #endif
         }

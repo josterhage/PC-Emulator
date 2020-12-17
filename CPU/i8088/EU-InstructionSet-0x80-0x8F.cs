@@ -86,7 +86,7 @@ namespace CPU.i8088
 
             private void mov_r8_rm8()
             {
-                throw new NotImplementedException();
+                //throw new NotImplementedException();
             }
 
             private void mov_r16_rm16()

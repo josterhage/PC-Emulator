@@ -21,30 +21,10 @@ namespace Testing
 
             Processor.BusInterfaceUnit biu = new Processor.BusInterfaceUnit();
 
-            biu.SetMemory(0, 0xb0);
-            biu.SetMemory(1, 0x28);
-            biu.SetMemory(2, 0x02);
-            biu.SetMemory(3, 0x06);
-            biu.SetMemory(4, 0x20);
-            biu.SetMemory(5, 0x00);
-            biu.SetMemory(6, 0xb3);
-            biu.SetMemory(7, 0x19);
-            biu.SetMemory(8, 0x00);
-            biu.SetMemory(9, 0xd8);
-            biu.SetMemory(10, 0xb8);
-            biu.SetMemory(11, 0x28);
-            biu.SetMemory(12, 0x00);
-            biu.SetMemory(13, 0x03);
-            biu.SetMemory(14, 0x06);
-            biu.SetMemory(15, 0x22);
-            biu.SetMemory(16, 0x00);
-            biu.SetMemory(17, 0xbb);
-            biu.SetMemory(18, 0x1e);
-            biu.SetMemory(19, 0x00);
-            biu.SetMemory(20, 0x01);
-            biu.SetMemory(21, 0xd8);
-            biu.SetMemory(0x20, 30);
-            biu.SetMemory(0x22, 60);
+            Console.WriteLine("Object file: ");
+            string filename = Console.ReadLine();
+
+            biu.FillFromFile(0, filename);
 
             cpu = new Processor(biu);
 
