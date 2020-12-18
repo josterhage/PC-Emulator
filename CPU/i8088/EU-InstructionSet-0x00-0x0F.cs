@@ -92,8 +92,6 @@ namespace CPU.i8088
                     // and bits 0-2 encode the dest
                     var srcReg = (WordGeneral)(tempBL & 0x07);
 
-                    ushort src = registers[srcReg];
-
                     registers[destReg] = set_flags_and_sum(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address

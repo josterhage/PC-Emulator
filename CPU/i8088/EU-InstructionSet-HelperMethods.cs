@@ -196,11 +196,9 @@ namespace CPU.i8088
 
                 flags.AF = sum >= 0xF;
 
-                if(sum > 0xff)
-                {
-                    flags.CF = true;
-                    sum &= 0xff;
-                }
+                flags.CF = sum > 0xff;
+                sum &= 0xff;
+
                 flags.OF = ((left < 0x80) || (right < 0x80)) && (sum >= 0x80);
                 flags.ZF = sum == 0;
                 set_sign((byte)sum);
@@ -214,17 +212,28 @@ namespace CPU.i8088
 
                 flags.AF = sum > 0xF;
 
-                if(sum > 0xffff)
-                {
-                    flags.CF = true;
-                    sum &= 0xffff;
-                }
+
+                flags.CF = sum > 0xffff;
+                sum &= 0xffff;
 
                 flags.OF = ((left < 0x8000) || (right < 0x8000)) && (sum >= 0x8000);
                 flags.ZF = sum == 0;
                 set_sign((ushort)sum);
                 set_parity((ushort)sum);
                 return (ushort)sum;
+            }
+
+            private byte set_flags_and_sum_carry(byte left, byte right)
+            {
+                var carry = flags.CF == true ? 1 : 0;
+
+                return (byte)(set_flags_and_sum(left, right) + carry);
+            }
+
+            private ushort set_flags_and_sum_carry(ushort left, ushort right)
+            {
+                var carry = flags.CF ? 1 : 0;
+                return (ushort)(set_flags_and_sum(left, right) + carry);
             }
 
             private byte set_flags_and_or(byte left, byte right)
