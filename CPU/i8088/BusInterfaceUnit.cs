@@ -269,7 +269,7 @@ namespace CPU.i8088
                         break;
                     case TState.data:
 #if DEBUG
-                        tempLow = memory[segments[workingSegment] + workingOffset];
+                        tempLow = memory[(segments[workingSegment] << 4) + workingOffset];
 #endif
                         tState = TState.clear;
                         break;
@@ -299,7 +299,7 @@ namespace CPU.i8088
                     case TState.data:
                         tState = TState.clear;
 #if DEBUG
-                        memory[segments[workingSegment] + workingOffset] = tempLow;
+                        memory[(segments[workingSegment] << 4) + workingOffset] = tempLow;
 #endif
                         break;
                     case TState.wait:
@@ -316,7 +316,7 @@ namespace CPU.i8088
                 memory[offset] = value;
             }
 
-            public void FillFromFile(ushort offset, string path)
+            public void FillFromFile(uint offset, string path)
             {
                 byte[] result;
 

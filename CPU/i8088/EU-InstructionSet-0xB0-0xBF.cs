@@ -89,33 +89,41 @@ namespace CPU.i8088
             private void mov_sp_i16()
             {
                 fetch_next_from_queue();
-                tempBH = tempBL;
+                tempCL = tempBL;
                 fetch_next_from_queue();
+                tempBL <<= 8;
+                tempBL |= tempCL;
                 registers.SP = TempB;
             }
 
             private void mov_bp_i16()
             {
                 fetch_next_from_queue();
-                tempBH = tempBL;
+                tempCL = tempBL;
                 fetch_next_from_queue();
-                registers.BP = TempB;
+                tempBL <<= 8;
+                tempBL |= tempCL;
+                registers.SP = TempB;
             }
 
             private void mov_si_i16()
             {
                 fetch_next_from_queue();
-                tempBH = tempBL;
+                tempCL = tempBL;
                 fetch_next_from_queue();
-                registers.SI = TempB;
+                tempBL <<= 8;
+                tempBL |= tempCL;
+                registers.SP = TempB;
             }
 
             private void mov_di_i16()
             {
                 fetch_next_from_queue();
-                tempBH = tempBL;
+                tempCL = tempBL;
                 fetch_next_from_queue();
-                registers.DI = TempB;
+                tempBL <<= 8;
+                tempBL |= tempCL;
+                registers.SP = TempB;
             }
         }
     }

@@ -9,7 +9,7 @@ namespace CPU.i8088
             private void push_ax()
             {
                 registers.SP -= 2;
-                //busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.AX);
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.AX);
             }
 
             private void push_cx()

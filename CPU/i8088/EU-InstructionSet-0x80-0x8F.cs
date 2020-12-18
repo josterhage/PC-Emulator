@@ -58,9 +58,10 @@ namespace CPU.i8088
                 }
                 else
                 {
-                    build_effective_address();
                     var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
+                    build_effective_address();
+                    
                     busInterfaceUnit.SetByte(overrideSegment, TempC, registers[srcReg]);
                 }
             }
@@ -77,16 +78,17 @@ namespace CPU.i8088
                 }
                 else
                 {
-                    build_effective_address();
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
+                    build_effective_address();
+                    
                     busInterfaceUnit.SetWord(overrideSegment, TempC, registers[srcReg]);
                 }
             }
 
             private void mov_r8_rm8()
             {
-                //throw new NotImplementedException();
+                throw new NotImplementedException();
             }
 
             private void mov_r16_rm16()
@@ -106,7 +108,24 @@ namespace CPU.i8088
 
             private void mov_seg_rm16()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                {
+                    var srcReg = (WordGeneral)(tempBL & 0x07);
+                    var destReg = (BusInterfaceUnit.Segment)((tempBL & 0x38) >> 3);
+
+                    busInterfaceUnit.SetSegment(destReg, registers[srcReg]);
+                }
+                else
+                {
+                    var destReg = (BusInterfaceUnit.Segment)((tempBL & 0x38) >> 3);
+
+                    build_effective_address();
+
+                    busInterfaceUnit.GetWord(overrideSegment, TempC);
+
+                    busInterfaceUnit.SetSegment(destReg, TempB);
+                }
             }
 
             private void pop_rm16()

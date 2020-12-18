@@ -21,10 +21,11 @@ namespace CPU.i8088
                 }
                 else //the destination is a memory address
                 {
+                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    
                     //load the address
                     build_effective_address();
-                    var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
-
+                    
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
                     busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_sum(registers[srcReg], dest));
@@ -43,9 +44,9 @@ namespace CPU.i8088
                 }
                 else
                 {
-                    build_effective_address();
-
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+
+                    build_effective_address();
 
                     ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
@@ -66,17 +67,14 @@ namespace CPU.i8088
                     // and bits 0-2 encode the dest
                     var srcReg = (ByteGeneral)(tempBL & 0x07);
 
-                    byte dest = registers[destReg];
-                    byte src = registers[srcReg];
-
                     registers[destReg] = set_flags_and_sum(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
-                    //load the address
-                    build_effective_address();
                     var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
+                    //load the address
+                    build_effective_address();
                     byte src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
                     registers[destReg] = set_flags_and_sum(registers[destReg], src);
@@ -100,10 +98,11 @@ namespace CPU.i8088
                 }
                 else //the destination is a memory address
                 {
-                    //load the address
-                    build_effective_address();
                     var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
+                    //load the address
+                    build_effective_address();
+                    
                     ushort src = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
                     registers[destReg] = set_flags_and_sum(registers[destReg], src);
@@ -133,7 +132,7 @@ namespace CPU.i8088
             private void pop_es()
             {
                 //read the value at SS:SP
-                //TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
                 //tell the BIU to set ES
                 busInterfaceUnit.SetSegment(BusInterfaceUnit.Segment.ES, TempA);
                 //increment the stack pointer by two
@@ -156,8 +155,8 @@ namespace CPU.i8088
                 else //the destination is a memory address
                 {
                     //load the address
-                    build_effective_address();
                     var srcReg = (ByteGeneral)((tempBL & 0x38) >> 3);
+                    build_effective_address();
 
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
@@ -177,9 +176,8 @@ namespace CPU.i8088
                 }
                 else
                 {
-                    build_effective_address();
-
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
+                    build_effective_address();
 
                     ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
@@ -204,10 +202,10 @@ namespace CPU.i8088
                 }
                 else //the destination is a memory address
                 {
-                    //load the address
-                    build_effective_address();
                     var destReg = (ByteGeneral)((tempBL & 0x38) >> 3);
 
+                    //load the address
+                    build_effective_address();
                     var src = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
                     registers[destReg] = set_flags_and_or(registers[destReg], src);
@@ -229,10 +227,10 @@ namespace CPU.i8088
                 }
                 else //the destination is a memory address
                 {
-                    //load the address
-                    build_effective_address();
                     var destReg = (WordGeneral)((tempBL & 0x38) >> 3);
 
+                    //load the address
+                    build_effective_address();
                     ushort src = (ushort)(busInterfaceUnit.GetByte(overrideSegment, TempC) << 8);
                     src |= busInterfaceUnit.GetByte(overrideSegment, (ushort)(TempC + 1));
 

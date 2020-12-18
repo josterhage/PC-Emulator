@@ -28,7 +28,7 @@ namespace CPU.i8088
             {
                 instructions = new Action[]
                 {
-                        add_rm8_r8,     // 0x00 add reg8/mem8 reg8
+                        add_rm8_r8,     // 0x00 add reg8/mem8 reg8 
                         add_rm16_r16,   // 0x01 add reg16/mem16 reg16
                         add_r8_rm8,     // 0x02 add reg8 reg8/mem8
                         add_r16_rm16,   // 0x03 add reg16 reg16/mem16

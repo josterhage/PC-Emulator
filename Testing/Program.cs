@@ -21,10 +21,8 @@ namespace Testing
 
             Processor.BusInterfaceUnit biu = new Processor.BusInterfaceUnit();
 
-            Console.WriteLine("Object file: ");
-            string filename = Console.ReadLine();
-
-            biu.FillFromFile(0, filename);
+            biu.FillFromFile(0, @"C:\Users\joste\OneDrive\Documents\Code\5150 Emulator\asmscratch\one.o");
+            //biu.FillFromFile(0xF000D, @"C:\Users\joste\OneDrive\Documents\Code\5150 Emulator\asmscratch\two.o");
 
             cpu = new Processor(biu);
 
