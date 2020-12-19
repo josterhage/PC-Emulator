@@ -194,7 +194,7 @@ namespace CPU.i8088
             {
                 ushort sum = (ushort)(left + right);
 
-                flags.AF = sum >= 0xF;
+                flags.AF = (left & 0x0f) + (right & 0x0f) > 0x0f;
 
                 flags.CF = sum > 0xff;
                 sum &= 0xff;
@@ -210,7 +210,7 @@ namespace CPU.i8088
             {
                 uint sum = (uint)(left + right);
 
-                flags.AF = sum > 0xF;
+                flags.AF = (left & 0x0f) + (right & 0x0f) > 0x0f;
 
 
                 flags.CF = sum > 0xffff;
@@ -225,7 +225,7 @@ namespace CPU.i8088
 
             private byte set_flags_and_sum_carry(byte left, byte right)
             {
-                var carry = flags.CF == true ? 1 : 0;
+                var carry = flags.CF ? 1 : 0;
 
                 return (byte)(set_flags_and_sum(left, right) + carry);
             }
@@ -251,6 +251,79 @@ namespace CPU.i8088
             private ushort set_flags_and_or(ushort left, ushort right)
             {
                 ushort result = (ushort)(left | right);
+                flags.OF = false;
+                flags.CF = false;
+                flags.ZF = result == 0;
+                set_sign(result);
+                set_parity(result);
+
+                return result;
+            }
+
+            private byte set_flags_and_diff(byte left, byte right)
+            {
+                byte diff = (byte)(left - right);
+
+                flags.AF = (left & 0x0f) > (right & 0x0f);
+
+                flags.CF = left > right;
+
+                flags.OF = (left - right) < -128;
+
+                flags.ZF = diff == 0;
+                set_sign(diff);
+                set_parity(diff);
+
+                return diff;
+            }
+
+            private ushort set_flags_and_diff(ushort left, ushort right)
+            {
+                ushort diff = (ushort)(left - right);
+
+                flags.AF = (left & 0x0f) > (right & 0x0f);
+
+                flags.CF = left > right;
+
+                flags.OF = (left - right) < -32768;
+
+                flags.ZF = diff == 0;
+
+                set_sign(diff);
+                set_parity(diff);
+
+                return diff;
+            }
+
+            private byte set_flags_and_diff_borrow(byte left, byte right)
+            {
+                var carry = flags.CF ? -1 : 0;
+
+                return (byte)(set_flags_and_diff(left, right) + carry);
+            }
+
+            private ushort set_flags_and_diff_borrow(ushort left, ushort right)
+            {
+                var carry = flags.CF ? -1 : 0;
+
+                return (ushort)(set_flags_and_diff(left, right) + carry);
+            }
+
+            private byte set_flags_and_and(byte left, byte right)
+            {
+                byte result = (byte)(left & right);
+                flags.OF = false;
+                flags.CF = false;
+                flags.ZF = result == 0;
+                set_sign(result);
+                set_parity(result);
+
+                return result;
+            }
+
+            private ushort set_flags_and_and(ushort left, ushort right)
+            {
+                ushort result = (ushort)(left & right);
                 flags.OF = false;
                 flags.CF = false;
                 flags.ZF = result == 0;
