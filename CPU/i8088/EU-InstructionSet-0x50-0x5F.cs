@@ -14,77 +14,93 @@ namespace CPU.i8088
 
             private void push_cx()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.CX);
             }
 
             private void push_dx()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.DX);
             }
 
             private void push_bx()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.BX);
             }
 
             private void push_sp()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.SP);
             }
 
             private void push_bp()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.BP);
             }
 
             private void push_si()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.SI);
             }
 
             private void push_di()
             {
-                throw new NotImplementedException();
+                registers.SP -= 2;
+                busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, registers.DI);
             }
 
             private void pop_ax()
             {
-                throw new NotImplementedException();
+                registers.AX = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_cx()
             {
-                throw new NotImplementedException();
+                registers.CX = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_dx()
             {
-                throw new NotImplementedException();
+                registers.DX = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_bx()
             {
-                throw new NotImplementedException();
+                registers.BX = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_sp()
             {
-                throw new NotImplementedException();
+                registers.SP = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                //testing appears to show that the value popped into SP is not changed
+                //registers.SP += 2; 
             }
 
             private void pop_bp()
             {
-                throw new NotImplementedException();
+                registers.BP = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_si()
             {
-                throw new NotImplementedException();
+                registers.SI = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
 
             private void pop_di()
             {
-                throw new NotImplementedException();
+                registers.DI = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.SS, registers.SP);
+                registers.SP += 2;
             }
         }
     }

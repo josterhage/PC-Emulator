@@ -17,7 +17,7 @@ namespace CPU.i8088
                     // and bits 0-2 encode the dest
                     var destReg = (ByteGeneral)(tempBL & 0x07);
 
-                    registers[destReg] = set_flags_and_sum_carry(registers[srcReg], registers[destReg]);
+                    registers[destReg] = set_flags_and_sum_carry(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
@@ -28,7 +28,7 @@ namespace CPU.i8088
 
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_sum_carry(registers[srcReg], dest));
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_sum_carry(dest, registers[srcReg]));
                 }
             }
 
@@ -40,7 +40,7 @@ namespace CPU.i8088
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
                     var destReg = (WordGeneral)(tempBL & 0x07);
 
-                    registers[destReg] = set_flags_and_sum_carry(registers[srcReg], registers[destReg]);
+                    registers[destReg] = set_flags_and_sum_carry(registers[destReg], registers[srcReg]);
                 }
                 else
                 {
@@ -50,7 +50,7 @@ namespace CPU.i8088
 
                     ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    TempA = set_flags_and_sum_carry(registers[srcReg], dest);
+                    TempA = set_flags_and_sum_carry(dest, registers[srcReg]);
 
                     busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
                 }
@@ -148,7 +148,7 @@ namespace CPU.i8088
                     // and bits 0-2 encode the dest
                     var destReg = (ByteGeneral)(tempBL & 0x07);
 
-                    registers[destReg] = set_flags_and_diff_borrow(registers[srcReg], registers[destReg]);
+                    registers[destReg] = set_flags_and_diff_borrow(registers[destReg], registers[srcReg]);
                 }
                 else //the destination is a memory address
                 {
@@ -159,7 +159,7 @@ namespace CPU.i8088
 
                     byte dest = busInterfaceUnit.GetByte(overrideSegment, TempC);
 
-                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_diff_borrow(registers[srcReg], dest));
+                    busInterfaceUnit.SetByte(overrideSegment, TempC, set_flags_and_diff_borrow(dest, registers[srcReg]));
                 }
             }
 
@@ -171,7 +171,7 @@ namespace CPU.i8088
                     var srcReg = (WordGeneral)((tempBL & 0x38) >> 3);
                     var destReg = (WordGeneral)(tempBL & 0x07);
 
-                    registers[destReg] = set_flags_and_diff_borrow(registers[srcReg], registers[destReg]);
+                    registers[destReg] = set_flags_and_diff_borrow(registers[destReg], registers[srcReg]);
                 }
                 else
                 {
@@ -181,7 +181,7 @@ namespace CPU.i8088
 
                     ushort dest = busInterfaceUnit.GetWord(overrideSegment, TempC);
 
-                    TempA = set_flags_and_diff_borrow(registers[srcReg], dest);
+                    TempA = set_flags_and_diff_borrow(dest, registers[srcReg]);
 
                     busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
                 }

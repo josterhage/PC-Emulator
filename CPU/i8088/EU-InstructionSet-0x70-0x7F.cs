@@ -8,82 +8,149 @@ namespace CPU.i8088
         {
             private void jo()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (flags.OF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jno()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.OF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jb_jnae_jc()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if(flags.CF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jnb_jae_jnc()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.CF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void je_jz()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jne_jnz()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jbe_jna()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if(flags.CF || flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jnbe_ja()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.CF || !flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void js()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (flags.SF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jns()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.SF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jp_jpe()
             {
-                throw new NotImplementedException();
+
+                fetch_next_from_queue();
+                if (flags.PF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jnp_jpo()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!flags.PF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jl_jnge()
             {
-                throw new NotImplementedException();
+
+                fetch_next_from_queue();
+                if (flags.SF ^ flags.OF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jnl_jge()
             {
-                throw new NotImplementedException();
+
+                fetch_next_from_queue();
+                if (!(flags.SF ^ flags.OF))
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jle_jng()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if ((flags.SF ^ flags.OF) || flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
 
             private void jnle_jg()
             {
-                throw new NotImplementedException();
+                fetch_next_from_queue();
+                if (!(flags.SF ^ flags.OF) || !flags.ZF)
+                {
+                    busInterfaceUnit.JumpShort(tempBL);
+                }
             }
         }
     }

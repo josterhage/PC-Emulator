@@ -35,6 +35,9 @@ namespace CPU.i8088
             private byte tempLow = 0;
             private byte tempHigh = 0;
 
+            private byte waitTicks = 0;
+            private bool waiting = false;
+
             private bool HandlingInterrupt = false;
 
             private ushort Temp
@@ -81,6 +84,8 @@ namespace CPU.i8088
                 }
             }
             #endregion
+
+            public bool Test { get; set; } = true;
 
             private TState tState = TState.none;
 
@@ -175,7 +180,7 @@ namespace CPU.i8088
                 s02 = BusState.passive;
             }
 
-            public void SetWord(Segment segment,ushort offset, ushort value)
+            public void SetWord(Segment segment, ushort offset, ushort value)
             {
                 SetByte(segment, offset, (byte)(value & 0xff));
                 SetByte(segment, (ushort)(offset + 1), (byte)((value & 0xff00) >> 8));
@@ -186,9 +191,57 @@ namespace CPU.i8088
                 SetWord(segmentOverride, offset, segments[segment]);
             }
 
+            public void WriteIPToStack(ushort offset)
+            {
+                SetWord(Segment.SS, offset, IP);
+            }
+
             public void SetSegment(Segment segment, ushort value)
             {
                 segments[segment] = value;
+            }
+
+            public ushort GetSegment(Segment segment)
+            {
+                return segments[segment];
+            }
+
+            public void Wait()
+            {
+                if (!Test)
+                {
+                    mainTimer.TockEvent -= on_tock_event;
+                    tState = TState.none;
+                    s02 = BusState.passive;
+                    waitTicks = 0;
+                    mainTimer.TockEvent += wait_handler;
+                    waiting = true;
+
+                    while (waiting) ;
+                }
+            }
+
+            private void wait_handler(object sender, EventArgs e)
+            {
+                waitTicks++;
+                if (waitTicks == 5)
+                {
+                    if (Test)
+                    {
+                        waiting = false;
+                        mainTimer.TockEvent -= wait_handler;
+                        if (InstructionQueue.Count < 6)
+                        {
+                            tState = TState.none;
+                            s02 = BusState.instructionFetch;
+                        }
+                        mainTimer.TockEvent += on_tock_event;
+                    }
+                    else
+                    {
+                        waitTicks = 0;
+                    }
+                }
             }
 
             private void single_cycle_write_handler(object sender, EventArgs e)
@@ -221,8 +274,10 @@ namespace CPU.i8088
                         break;
                     case BusState.passive:
                         if (InstructionQueue.Count < 6)
+                        {
                             tState = TState.none;
                             s02 = BusState.instructionFetch;
+                        }
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -326,12 +381,75 @@ namespace CPU.i8088
                     sourceStream.Read(result, 0, (int)sourceStream.Length);
                 }
 
-                for(int i =0; i < result.Length; i++)
+                for (int i = 0; i < result.Length; i++)
                 {
                     memory[i + offset] = result[i];
                 }
             }
 #endif
+
+            public void JumpShort(byte offset)
+            {
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                s02 = BusState.instructionFetch;
+
+                if ((offset & 0x80) != 0)
+                {
+                    offset ^= 0xff;
+                    offset++;
+                    IP -= offset;
+                }
+                else
+                {
+                    IP += offset;
+                }
+
+                InstructionQueue.Clear();
+
+                mainTimer.TockEvent += on_tock_event;
+            }
+
+            public void JumpNear(ushort offset)
+            {
+                mainTimer.TockEvent -= on_tock_event;
+
+                tState = TState.none;
+
+                s02 = BusState.instructionFetch;
+
+                if ((offset & 0x8000) != 0)
+                {
+                    offset ^= 0xffff;
+                    offset++;
+                    IP -= offset;
+                }
+                else
+                {
+                    IP += offset;
+                }
+
+                InstructionQueue.Clear();
+
+                mainTimer.TockEvent += on_tock_event;
+            }
+
+            public void JumpFar(ushort newCS, ushort newIP)
+            {
+                mainTimer.TockEvent -= on_tock_event;
+
+                s02 = BusState.instructionFetch;
+
+                segments.CS = newCS;
+
+                IP = newIP;
+
+                InstructionQueue.Clear();
+
+                mainTimer.TockEvent += on_tock_event;
+            }
         }
     }
 }
