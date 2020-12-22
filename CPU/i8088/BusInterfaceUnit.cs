@@ -450,6 +450,38 @@ namespace CPU.i8088
 
                 mainTimer.TockEvent += on_tock_event;
             }
+
+            public void JumpImmediate(ushort newIP)
+            {
+                mainTimer.TockEvent -= on_tock_event;
+                
+                s02 = BusState.instructionFetch;
+                
+                IP = newIP;
+                
+                InstructionQueue.Clear();
+
+                mainTimer.TockEvent += on_tock_event;
+            }
+
+            public void JumpToInterruptVector(ushort interrupt)
+            {
+                ushort ip = GetWord(Segment.absolute, (ushort)(interrupt * 4));
+                
+                ushort cs = GetWord(Segment.absolute, (ushort)((interrupt * 4) + 2));
+                
+                mainTimer.TockEvent -= on_tock_event;
+                
+                s02 = BusState.instructionFetch;
+                
+                IP = ip;
+                
+                segments.CS = cs;
+                
+                InstructionQueue.Clear();
+                
+                mainTimer.TockEvent += on_tock_event;
+            }
         }
     }
 }

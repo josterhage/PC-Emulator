@@ -16,7 +16,7 @@ namespace CPU.i8088
         {
             public enum Segment
             {
-                ES, CS, SS, DS, none = 99
+                ES, CS, SS, DS, absolute = 98, none = 99
             }
 
             private class SegmentRegisters
@@ -40,6 +40,8 @@ namespace CPU.i8088
                                 return SS;
                             case Segment.DS:
                                 return DS;
+                            case Segment.absolute:
+                                return 0;
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
