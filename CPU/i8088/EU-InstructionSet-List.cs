@@ -309,14 +309,14 @@ namespace CPU.i8088
                         xlat,           // 0xd7 xlat (al = [ds:bx])
 
                         //co-processor escape prefixes
-                        esc_d8,         // 0xd8
-                        esc_d9,         // 0xd9
-                        esc_da,         // 0xda
-                        esc_db,         // 0xdb
-                        esc_dc,         // 0xdc
-                        esc_dd,         // 0xdd
-                        esc_de,         // 0xde
-                        esc_df,         // 0xdf
+                        esc,         // 0xd8
+                        esc,         // 0xd9
+                        esc,         // 0xda
+                        esc,         // 0xdb
+                        esc,         // 0xdc
+                        esc,         // 0xdd
+                        esc,         // 0xde
+                        esc,         // 0xdf
 
                         //short loops
                         loopne_nz_i8,   // 0xe0 loopne/loopnz inc8

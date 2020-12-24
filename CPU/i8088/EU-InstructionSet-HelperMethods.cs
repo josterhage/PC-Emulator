@@ -14,7 +14,7 @@ namespace CPU.i8088
             /// Builds the effective address for the current operation based on mod/rm and any relevant immediate values and stores it in TempC
             /// </summary>
             /// <remarks>
-            /// Assumes that TempB already contains the ModRM byte and that any memory values are still in the instruction queue
+            /// Assumes that TempB already contains the ModRM byte and that any memory values are still in the instruction queue. Does not modify tempBL
             /// </remarks>
             private void build_effective_address()
             {
@@ -355,6 +355,300 @@ namespace CPU.i8088
                 set_parity(result);
 
                 return result;
+            }
+
+            private byte rol(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                byte mask = (byte)((0xff - ((1 << 8 - count) - 1)) & value);
+
+                mask >>= 8 - count;
+
+                value <<= count;
+
+                value |= mask;
+
+                flags.CF = (value & 0x01) != 0;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x80) != 0));
+
+                return value;
+            }
+
+            private byte ror(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                byte mask = (byte)(((1 << count) - 1) & value);
+
+                mask <<= 8 - count;
+
+                value >>= count;
+
+                value |= mask;
+
+                flags.CF = (value & 0x80) != 0;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x80) != 0));
+
+                return value;
+            }
+
+            private byte rcl(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                byte mask = (byte)((0xff - ((1 << 8 - count) - 1)) & value);
+
+                mask >>= 1;
+
+                mask |= flags.CF ? 0x80 : 0;
+
+                mask >>= 8 - count - 1;
+
+                flags.CF = (mask & 0x01) != 0;
+
+                mask >>= 1;
+
+                value <<= count;
+
+                value |= mask;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x80) != 0));
+
+                return value;
+            }
+
+            private byte rcr(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                byte mask = (byte)(((1 << count) - 1) & value);
+
+                mask <<= 1;
+
+                mask |= flags.CF ? 0x01 : 0;
+
+                mask <<= 8 - count - 1;
+
+                flags.CF = (mask & 0x80) != 0;
+
+                mask <<= 1;
+
+                value >>= count;
+
+                value |= mask;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x80) != 0));
+
+                return value;
+            }
+
+            private byte sal(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                flags.CF = (value & (1 << 8 - count)) != 0;
+
+                value <<= count;
+
+                flags.SF = (value & 0x80) != 0;
+
+                flags.OF = sign != flags.SF;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
+            }
+
+            private byte shr(byte value, byte count = 1)
+            {
+                bool sign = (value & 0x80) != 0;
+
+                flags.SF = false;
+
+                flags.CF = (value & (1 << count - 1)) != 0;
+
+                value >>= count;
+
+                flags.OF = sign;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
+            }
+
+            private byte sar(byte value, byte count = 1)
+            {
+                flags.SF = (value & 0x80) != 0;
+
+                flags.CF = (value & (1 << count -1)) != 0;
+
+                value >>= count;
+
+                byte mask = (byte)(0xff - ((1 << 8 - count) - 1));
+
+                value |= flags.SF ? mask : 0;
+
+                flags.OF = false;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
+            }
+
+            private ushort rol(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                ushort mask = (ushort)((0xffff - ((1 << 16 - count) - 1)) & value);
+
+                mask >>= 16 - count;
+
+                value <<= count;
+
+                value |= mask;
+
+                flags.CF = (value & 0x01) != 0;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x8000) != 0));
+
+                return value;
+            }
+
+            private ushort ror(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                ushort mask = (ushort)(((1 << count) - 1) & value);
+
+                mask <<= 16 - count;
+
+                value >>= count;
+
+                value |= mask;
+
+                flags.CF = (value & 0x8000) != 0;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x8000) != 0));
+
+                return value;
+            }
+
+            private ushort rcl(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                ushort mask = (ushort)((0xffff - ((1 << 16 - count) - 1)) & value);
+
+                mask >>= 1;
+
+                mask |= flags.CF ? 0x8000 : 0;
+
+                mask >>= 16 - count - 1;
+
+                flags.CF = (mask & 0x01) != 0;
+
+                mask >>= 1;
+
+                value <<= count;
+
+                value |= mask;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x8000) != 0));
+
+                return value;
+            }
+
+            private ushort rcr(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                ushort mask = (ushort)(((1 << count) - 1) & value);
+
+                mask <<= 1;
+
+                mask |= flags.CF ? 0x01 : 0;
+
+                mask <<= 16 - count - 1;
+
+                flags.CF = (mask & 0x8000) != 0;
+
+                mask <<= 1;
+
+                value >>= count;
+
+                value |= mask;
+
+                flags.OF = (count == 1) && (sign != ((value & 0x8000) != 0));
+
+                return value;
+            }
+
+            private ushort sal(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                flags.CF = (value & (1 << 16 - count)) != 0;
+
+                value <<= count;
+
+                flags.SF = (value & 0x8000) != 0;
+
+                flags.OF = sign != flags.SF;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
+            }
+
+            private ushort shr(ushort value, byte count = 1)
+            {
+                bool sign = (value & 0x8000) != 0;
+
+                flags.SF = false;
+
+                flags.CF = (value & (1 << count - 1)) != 0;
+
+                value >>= count;
+
+                flags.OF = sign;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
+            }
+
+            private ushort sar(ushort value, byte count = 1)
+            {
+                flags.SF = (value & 0x8000) != 0;
+
+                flags.CF = (value & (1 << count - 1)) != 0;
+
+                value >>= count;
+
+                ushort mask = (byte)(0xffff - ((1 << 16 - count) - 1));
+
+                value |= flags.SF ? mask : 0;
+
+                flags.OF = false;
+
+                flags.ZF = value == 0;
+
+                set_parity(value);
+
+                return value;
             }
         }
     }
