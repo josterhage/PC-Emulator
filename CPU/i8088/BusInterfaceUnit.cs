@@ -125,6 +125,26 @@ namespace CPU.i8088
                 return InstructionQueue.Dequeue();
             }
 
+            public byte InByte(ushort port)
+            {
+                return GetByte(Segment.absolute, port);
+            }
+
+            public ushort InWord(ushort port)
+            {
+                return GetWord(Segment.absolute, port);
+            }
+
+            public void OutByte(ushort port, byte value)
+            {
+                SetByte(Segment.absolute, port, value);
+            }
+
+            public void OutWord(ushort port, ushort value)
+            {
+                SetWord(Segment.absolute, port, value);
+            }
+
             public byte GetByte(Segment segment, ushort offset)
             {
                 while (tState != TState.clear || s02 == BusState.halt || HandlingInterrupt) ;
