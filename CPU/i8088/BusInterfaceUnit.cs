@@ -86,6 +86,7 @@ namespace CPU.i8088
             #endregion
 
             public bool Test { get; set; } = true;
+            public bool Lock { get; private set; } = true;
 
             private TState tState = TState.none;
 
@@ -226,6 +227,16 @@ namespace CPU.i8088
                 return segments[segment];
             }
 
+            public void AssertLock()
+            {
+                Lock = false;
+            }
+
+            public void DeassertLock()
+            {
+                Lock = true;
+            }
+            
             public void Wait()
             {
                 if (!Test)

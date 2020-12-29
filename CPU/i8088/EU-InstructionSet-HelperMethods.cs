@@ -357,6 +357,16 @@ namespace CPU.i8088
                 return result;
             }
 
+            private ushort set_flags_and_imul(byte dest, byte src)
+            {
+                short result = 0;
+                result = (short)(dest * src);
+                ushort signtest = (ushort)(result & 0xff);
+                signtest |= (ushort)(((signtest & 0x80) != 0) ? 0xff00 : 0);
+                flags.CF = flags.OF = result == signtest;
+                return (ushort)result;
+            }
+
             private byte rol(byte value, byte count = 1)
             {
                 bool sign = (value & 0x80) != 0;

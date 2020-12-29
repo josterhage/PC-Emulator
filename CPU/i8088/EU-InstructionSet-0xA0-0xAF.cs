@@ -49,34 +49,34 @@ namespace CPU.i8088
             private void movsb()
             {
                 tempAL = busInterfaceUnit.GetByte(overrideSegment, registers.SI);
-                registers.SI++;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 1) : (ushort)(registers.SI + 1);
                 busInterfaceUnit.SetByte(BusInterfaceUnit.Segment.ES, registers.DI, tempAL);
-                registers.DI++;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 1) : (ushort)(registers.DI + 1);
             }
 
             private void movsw()
             {
                 TempA = busInterfaceUnit.GetWord(overrideSegment, registers.SI);
-                registers.SI += 2;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 2) : (ushort)(registers.SI + 2);
                 busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.ES, registers.DI, TempA);
-                registers.DI += 2;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 2) : (ushort)(registers.DI + 2);
             }
 
             private void cmpsb()
             {
                 tempAL = busInterfaceUnit.GetByte(overrideSegment, registers.SI);
-                registers.SI++;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 1) : (ushort)(registers.SI + 1);
                 tempBL = busInterfaceUnit.GetByte(BusInterfaceUnit.Segment.ES, registers.DI);
-                registers.DI++;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 1) : (ushort)(registers.DI + 1); 
                 tempCL = set_flags_and_diff(tempAL, tempBL);
             }
 
             private void cmpsw()
             {
                 TempA = busInterfaceUnit.GetWord(overrideSegment, registers.SI);
-                registers.SI += 2;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 2) : (ushort)(registers.SI + 2);
                 TempB = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.ES, registers.DI);
-                registers.DI += 2;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 2) : (ushort)(registers.DI + 2);
                 TempC = set_flags_and_diff(TempA, TempB);
             }
 
@@ -98,38 +98,38 @@ namespace CPU.i8088
             private void stosb()
             {
                 busInterfaceUnit.SetByte(BusInterfaceUnit.Segment.ES, registers.DI, registers.AL);
-                registers.DI++;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 1) : (ushort)(registers.DI + 1);
             }
 
             private void stosw()
             {
                 busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.ES, registers.DI, registers.AX);
-                registers.DI += 2;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 2) : (ushort)(registers.DI + 2);
             }
 
             private void lodsb()
             {
                 registers.AL = busInterfaceUnit.GetByte(overrideSegment, registers.SI);
-                registers.SI++;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 1) : (ushort)(registers.SI + 1);
             }
 
             private void lodsw()
             {
                 registers.AX = busInterfaceUnit.GetWord(overrideSegment, registers.SI);
-                registers.SI += 2;
+                registers.SI = flags.DF ? (ushort)(registers.SI - 2) : (ushort)(registers.SI + 2);
             }
 
             private void scasb()
             {
                 tempAL = busInterfaceUnit.GetByte(BusInterfaceUnit.Segment.ES, registers.DI);
-                registers.DI++;
-                tempBL = set_flags_and_diff(registers.AL,tempAL);
+                registers.DI = flags.DF ? (ushort)(registers.DI - 1) : (ushort)(registers.DI + 1);
+                tempBL = set_flags_and_diff(registers.AL, tempAL);
             }
 
             private void scasw()
             {
                 TempA = busInterfaceUnit.GetWord(BusInterfaceUnit.Segment.ES, registers.DI);
-                registers.DI += 2;
+                registers.DI = flags.DF ? (ushort)(registers.DI - 2) : (ushort)(registers.DI + 2);
                 TempB = set_flags_and_diff(registers.AX, TempA);
             }
         }
