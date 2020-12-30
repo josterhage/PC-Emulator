@@ -231,7 +231,7 @@ namespace CPU.i8088
             {
                 fetch_next_from_queue();
                 var op = (byte)((tempBL & 0x38) >> 3);
-                if((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                if ((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
                 {
                     var destReg = (ByteGeneral)(tempBL & 0x07);
                     registers[destReg] = op == 0 ? (byte)(registers[destReg] + 1) : (byte)(registers[destReg] - 1);
@@ -249,10 +249,69 @@ namespace CPU.i8088
             {
                 fetch_next_from_queue();
                 var op = (byte)((tempBL & 0x38) >> 3);
-                if((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                switch (op)
                 {
-                    var destReg = (WordGeneral)(tempBL & 0x07);
-                    var dest = registers[destReg];
+                    case 0:
+                        build_effective_address();
+                        TempA = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                        TempA++;
+                        busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
+                        return;
+                    case 1:
+                        build_effective_address();
+                        TempA = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                        TempA--;
+                        busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
+                        return;
+                    case 2:
+                        if ((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                        {
+                            var destReg = (WordGeneral)(tempBL & 0x07);
+                            TempC = registers[destReg];
+                        }
+                        else
+                        {
+                            build_effective_address();
+                        }
+                        busInterfaceUnit.WriteIPToStack(registers.SP);
+                        registers.SP -= 2;
+                        busInterfaceUnit.JumpNear(TempC);
+                        return;
+                    case 3:
+                        build_effective_address();
+                        TempA = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                        TempB = busInterfaceUnit.GetWord(overrideSegment, (ushort)(TempC + 2));
+                        push_cs();
+                        busInterfaceUnit.WriteIPToStack(registers.SP);
+                        registers.SP -= 2;
+                        busInterfaceUnit.JumpFar(TempB, TempA);
+                        return;
+                    case 4:
+                        if((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
+                        {
+                            var destReg = (WordGeneral)(tempBL & 0x07);
+                            TempC = registers[destReg];
+                        }
+                        else
+                        {
+                            build_effective_address();
+                        }
+                        busInterfaceUnit.JumpNear(TempC);
+                        return;
+                    case 5:
+                        build_effective_address();
+                        TempA = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                        TempB = busInterfaceUnit.GetWord(overrideSegment, (ushort)(TempC + 2));
+                        busInterfaceUnit.JumpFar(TempB, TempA);
+                        return;
+                    case 6:
+                        build_effective_address();
+                        TempA = busInterfaceUnit.GetWord(overrideSegment, TempC);
+                        busInterfaceUnit.SetWord(BusInterfaceUnit.Segment.SS, registers.SP, TempA);
+                        registers.SP -= 2;
+                        return;
+                    default:
+                        throw new InvalidOperationException();
                 }
             }
         }

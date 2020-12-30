@@ -28,6 +28,7 @@ namespace CPU.i8088
             private bool isRunning = true;
 
             private bool repInstruction = false;
+            private bool halted = false;
 
             public ExecutionUnit(BusInterfaceUnit busInterfaceUnit)
             {

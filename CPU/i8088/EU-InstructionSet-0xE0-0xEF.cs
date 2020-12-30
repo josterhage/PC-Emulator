@@ -81,7 +81,6 @@ namespace CPU.i8088
 
             private void call_near_i16()
             {
-                push_cs();
                 busInterfaceUnit.WriteIPToStack(registers.SP);
                 registers.SP -= 2;
 
