@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30711.63
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PC Emulator", "PC Emulator\PC Emulator.csproj", "{2CF64208-B6F4-4A39-8984-C086BFE3B203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPU", "CPU\CPU.csproj", "{211F250A-ED7B-46D8-8B1F-1B483985C96B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SystemBoard", "CPU\SystemBoard.csproj", "{211F250A-ED7B-46D8-8B1F-1B483985C96B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{01BAED79-8B37-47DA-BD35-04DFE26FA6E2}"
 EndProject

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CPU.SystemClock
+namespace SystemBoard.SystemClock
 {
     /// <summary>
     /// Class <c>MainTimer</c> provides a timer which uses System.Diagnostics.Stopwatch to provide tocks
