@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+
+//TODO: Add methods/properties to handle wait state requests
 namespace SystemBoard.SystemClock
 {
     /// <summary>
@@ -24,11 +26,11 @@ namespace SystemBoard.SystemClock
 
         private readonly Stopwatch stopwatch;
 
-        public UInt64 TotalTicks { get; private set; } = 0;
+        public ulong TotalTicks { get; private set; } = 0;
 
-        public event EventHandler TockEvent; // I'm trying to ... mostly comply with .NET guidelines.
-        public event EventHandler TwoTockEvent;
-        public event EventHandler FourTockEvent;
+        public event EventHandler<TimerEventArgs> TockEvent; // I'm trying to ... mostly comply with .NET guidelines.
+        public event EventHandler<TimerEventArgs> TwoTockEvent;
+        public event EventHandler<TimerEventArgs> FourTockEvent;
 
         private MainTimer()
         {
@@ -60,17 +62,17 @@ namespace SystemBoard.SystemClock
             {
                 if (stopwatch.ElapsedTicks >= ticks)
                 {
-                    OnTock(new EventArgs());
+                    OnTock();
                     stopwatch.Restart();
                 }
             }
         }
 
-        public void OnTock(EventArgs e)
+        public void OnTock()
         {
-            EventHandler raiseEvent = TockEvent;
+            EventHandler<TimerEventArgs> raiseEvent = TockEvent;
 
-            raiseEvent?.Invoke(this, e);
+            raiseEvent?.Invoke(this, new TimerEventArgs(true,false,TotalTicks));
 
             TotalTicks++;
 
@@ -78,14 +80,14 @@ namespace SystemBoard.SystemClock
             if (tocks == 2)
             {
                 raiseEvent = TwoTockEvent;
-                raiseEvent?.Invoke(this, e);
+                raiseEvent?.Invoke(this, new TimerEventArgs(true, false, TotalTicks));
             }
             else if (tocks == 4)
             {
                 raiseEvent = TwoTockEvent;
-                raiseEvent?.Invoke(this, e);
+                raiseEvent?.Invoke(this, new TimerEventArgs(true, false, TotalTicks));
                 raiseEvent = FourTockEvent;
-                raiseEvent?.Invoke(this, e);
+                raiseEvent?.Invoke(this, new TimerEventArgs(true, false, TotalTicks));
                 tocks = 0;
             }
 

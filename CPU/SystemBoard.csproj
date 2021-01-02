@@ -41,16 +41,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bus\IOBusController.cs" />
+    <Compile Include="Bus\MemoryBusController.cs" />
+    <Compile Include="i8088\BusState.cs" />
     <Compile Include="i8088\EUChangeEventArgs.cs" />
-    <Compile Include="FrontSideBusController.cs" />
+    <Compile Include="Bus\FrontSideBusController.cs" />
     <Compile Include="i8088\BIUChangeEventArgs.cs" />
     <Compile Include="i8088\SegmentRegisters.cs" />
     <Compile Include="i8088\FlagRegister.cs" />
     <Compile Include="i8088\ExecutionUnit.cs" />
     <Compile Include="i8088\GeneralRegisters.cs" />
     <Compile Include="i8088\Processor.cs" />
+    <Compile Include="IMemoryLocation.cs" />
+    <Compile Include="Memory\DramChip.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Memory\RomChip.cs" />
     <Compile Include="SystemClock\MainTimer.cs" />
+    <Compile Include="SystemClock\TimerEventArgs.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SystemBoard.Bus;
 using SystemBoard.SystemClock;
 
 namespace SystemBoard.i8088
@@ -73,22 +74,12 @@ namespace SystemBoard.i8088
 
         private BusState s02;
 
-        public enum BusState
-        {
-            interruptAcknowledge,
-            readPort,
-            writePort,
-            halt,
-            instructionFetch,
-            readMemory,
-            writeMemory,
-            passive
-        }
-
+        
         public bool Test { get; set; } = true;
         public bool Lock { get; private set; } = true;
 
         private TState tState = TState.none;
+        private TState nextState = TState.address;
 
         private enum TState
         {
@@ -327,8 +318,16 @@ namespace SystemBoard.i8088
             mainTimer.TockEvent -= single_cycle_write_handler;
         }
 
-        private void on_tock_event(object sender, EventArgs e)
+        private void on_tock_event(object sender, TimerEventArgs e)
         {
+            if (e.Ready)
+            {
+                tState = nextState;
+            }
+            else
+            {
+                tState = TState.wait;
+            }
             //this should be set NLT T4 on each read/write cycle
             switch (s02)
             {
@@ -392,18 +391,17 @@ namespace SystemBoard.i8088
                 case TState.none: //begin T1
                                   //TODO: put address on bus;
                     fbc.Address = (segments[workingSegment] << 4) + workingOffset;
-                    tState = TState.address;
+                    nextState = TState.address;
                     break;
                 case TState.address: //begin T2
                                      //A16-A19 become S3-S6
                                      //AD0-AD7 clear
-                    fbc.S34 = (byte)workingSegment;
+                    fbc.S34 = workingSegment;
                     fbc.S5 = InterruptEnabled;
-                    tState = TState.status;
+                    nextState = TState.status;
                     break;
                 case TState.status: //begin T3
-                                    //no change?
-                    tState = TState.data;
+                    nextState = TState.data;
                     break;
                 case TState.data: //begin T4
                     tempLow = fbc.Data;
@@ -411,14 +409,14 @@ namespace SystemBoard.i8088
                     //#if DEBUG
                     //                        tempLow = memory[(segments[workingSegment] << 4) + workingOffset];
                     //#endif
-                    tState = TState.clear;
+                    nextState = TState.clear;
                     break;
                 case TState.wait:
                     // does the BIU need to do anything here? ensure that a pin is set or something?
                     break;
                 case TState.clear:
                     //onBusCycleComplete.Invoke();
-                    tState = TState.none;
+                    nextState = TState.none;
                     break;
             }
         }
@@ -429,19 +427,19 @@ namespace SystemBoard.i8088
             {
                 case TState.none://begin T1
                     fbc.Address = (segments[workingSegment] << 4) + workingOffset;
-                    tState = TState.address;
+                    nextState = TState.address;
                     break;
                 case TState.address: //begin T2
-                    fbc.S34 = (byte)workingSegment;
+                    fbc.S34 = workingSegment;
                     fbc.S5 = InterruptEnabled;
                     fbc.Data = tempLow;
-                    tState = TState.status;
+                    nextState = TState.status;
                     break;
                 case TState.status: //begin T3
-                    tState = TState.data;
+                    nextState = TState.data;
                     break;
                 case TState.data: //begin T4
-                    tState = TState.clear;
+                    nextState = TState.clear;
                     //#if DEBUG
                     //                        memory[(segments[workingSegment] << 4) + workingOffset] = tempLow;
                     //#endif
@@ -449,7 +447,7 @@ namespace SystemBoard.i8088
                 case TState.wait:
                     break;
                 case TState.clear:
-                    tState = TState.none;
+                    nextState = TState.none;
                     break;
             }
         }
@@ -556,6 +554,7 @@ namespace SystemBoard.i8088
             executionUnit = new ExecutionUnit(this);
             executionUnit.EUChangedEvent += on_eu_change;
             this.fbc = fbc;
+            mainTimer.TockEvent += on_tock_event;
             executionUnit.Run();
         }
     }

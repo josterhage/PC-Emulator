@@ -25,8 +25,6 @@ using SystemBoard.SystemClock;
 
 namespace SystemBoard.i8088
 {
-    
-
     class ExecutionUnit
     {
         //TODO: does the execution unit need timer access? its operation is asynchronous by nature: it gets data from the queue one byte at a time, works on it, and blocks when no new data is available
@@ -37,13 +35,13 @@ namespace SystemBoard.i8088
 
         public GeneralRegisters Registers { get; private set; } = new GeneralRegisters();
         public readonly FlagRegister flags = new FlagRegister();
-        private byte opcode
+        private byte Opcode
         {
-            get => opcode;
+            get => Opcode;
             set
             {
-                opcode = value;
-                EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), opcode));
+                Opcode = value;
+                EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), Opcode));
             }
         }
 
@@ -51,7 +49,7 @@ namespace SystemBoard.i8088
 
         private void on_register_change(object sender, EventArgs e)
         {
-            EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), opcode));
+            EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), Opcode));
         }
 
         private readonly Thread executionUnitThread;
@@ -90,9 +88,8 @@ namespace SystemBoard.i8088
             while (isRunning)
             {
                 //check for pending interrupt
-                opcode = parent.GetNextFromQueue();
-
-                instructions[opcode]?.Invoke();
+                Opcode = parent.GetNextFromQueue();
+                instructions[Opcode]?.Invoke();
                 zeroize_temps();
                 overrideSegment = Segment.DS;
             }
@@ -676,6 +673,9 @@ namespace SystemBoard.i8088
             parent.SetSegment(Segment.ES, TempA);
             //increment the stack pointer by two
             Registers.SP += 2;
+            zeroize_temps();
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
         }
 
         private void or_rm8_r8()
@@ -938,6 +938,9 @@ namespace SystemBoard.i8088
             parent.SetSegment(Segment.SS, TempA);
             //increment the stack pointer by two
             Registers.SP += 2;
+            zeroize_temps();
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
         }
 
         private void sbb_rm8_r8()
@@ -1064,6 +1067,9 @@ namespace SystemBoard.i8088
             TempA = parent.ReadWord(Segment.SS, Registers.SP);
             parent.SetSegment(Segment.SS, TempA);
             Registers.SP += 2;
+            zeroize_temps();
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
         }
 
         private void and_rm8_r8()
@@ -2811,6 +2817,10 @@ namespace SystemBoard.i8088
 
                 parent.SetSegment(destReg, TempB);
             }
+
+            zeroize_temps();
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
         }
 
         private void pop_rm16()
@@ -3324,6 +3334,10 @@ namespace SystemBoard.i8088
             Registers.SP += 2;
             popf();
             parent.JumpFar(TempB, TempA);
+            zeroize_temps();
+            overrideSegment = Segment.DS;
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
         }
 
         private void rot_shift1_rm8()
@@ -3842,6 +3856,10 @@ namespace SystemBoard.i8088
 
         //0xF1 has no instruction
 
+
+        // Because of the way we expect hardware interrupts to work, and the way the intel documentation
+        // says interrupts work during rep instructions, rep instructions need to run the show until they're complete
+        // and do their own checking for hardward interrupts
         private void repne_nz()
         {
             //Check for pending interrupt
@@ -4040,8 +4058,12 @@ namespace SystemBoard.i8088
             flags.IF = false;
         }
 
+        // 
         private void sti()
         {
+            zeroize_temps();
+            Opcode = parent.GetNextFromQueue();
+            instructions[Opcode]?.Invoke();
             flags.IF = true;
         }
 
