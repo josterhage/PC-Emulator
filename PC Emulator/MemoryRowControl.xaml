@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="PC_Emulator.MemoryRowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PC_Emulator"
+             mc:Ignorable="d" 
+             d:DesignHeight="16" d:DesignWidth="560">
+
+    <ListViewItem Width="560" Height="16">
+        <Grid Width="560" Height="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="17*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" FontFamily="Courier New" x:Name="offset">Offset</TextBlock>
+            <TextBlock Grid.Column="1" FontFamily="Courier New" x:Name="zero">00</TextBlock>
+            <TextBlock Grid.Column="2" FontFamily="Courier New" x:Name="one">01</TextBlock>
+            <TextBlock Grid.Column="3" FontFamily="Courier New" x:Name="two">02</TextBlock>
+            <TextBlock Grid.Column="4" FontFamily="Courier New" x:Name="three">03</TextBlock>
+            <TextBlock Grid.Column="5" FontFamily="Courier New" x:Name="four">04</TextBlock>
+            <TextBlock Grid.Column="6" FontFamily="Courier New" x:Name="five">05</TextBlock>
+            <TextBlock Grid.Column="7" FontFamily="Courier New" x:Name="six">06</TextBlock>
+            <TextBlock Grid.Column="8" FontFamily="Courier New" x:Name="seven">07</TextBlock>
+            <TextBlock Grid.Column="9" FontFamily="Courier New" x:Name="eight">08</TextBlock>
+            <TextBlock Grid.Column="10" FontFamily="Courier New" x:Name="nine">09</TextBlock>
+            <TextBlock Grid.Column="11" FontFamily="Courier New" x:Name="a">0A</TextBlock>
+            <TextBlock Grid.Column="12" FontFamily="Courier New" x:Name="b">0B</TextBlock>
+            <TextBlock Grid.Column="13" FontFamily="Courier New" x:Name="c">0C</TextBlock>
+            <TextBlock Grid.Column="14" FontFamily="Courier New" x:Name="d">0D</TextBlock>
+            <TextBlock Grid.Column="15" FontFamily="Courier New" x:Name="e">0E</TextBlock>
+            <TextBlock Grid.Column="16" FontFamily="Courier New" x:Name="f">0F</TextBlock>
+            <TextBlock Grid.Column="17" FontFamily="Courier New" x:Name="decoded">Decoded</TextBlock>
+        </Grid>
+    </ListViewItem>
+</UserControl>

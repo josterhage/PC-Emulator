@@ -2,83 +2,75 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SystemBoard.Bus;
 using SystemBoard.SystemClock;
+using SystemBoard.i8259;
 
 namespace SystemBoard.i8088
 {
-    public partial class Processor
+    public class Processor 
     {
         private readonly ExecutionUnit executionUnit;
         private readonly FrontSideBusController fbc;
         private readonly MainTimer mainTimer = MainTimer.GetInstance();
-
-        public event EventHandler<EUChangeEventArgs> EUChangeEvent;
-        public event EventHandler<BIUChangeEventArgs> BIUChangeEvent;
-
-        private void on_eu_change(object sender, EUChangeEventArgs e)
-        {
-            EUChangeEvent?.Invoke(sender, e);
-        }
-
-        private void biu_changed()
-        {
-            BIUChangeEvent?.Invoke(this, new BIUChangeEventArgs(segments, IP));
-        }
-
         private readonly SegmentRegisters segments = new SegmentRegisters();
 
-        private void on_segment_change(object sender, EventArgs e)
-        {
-            biu_changed();
-        }
+        private ushort _ip;
 
         private ushort IP
         {
-            get => IP;
+            get => _ip;
             set
             {
-                IP = value;
-                biu_changed();
+                _ip = value;
+                InstructionPointerChangeEvent?.Invoke(this, new InstructionPointerChangeEventArgs(_ip));
             }
         }
 
         private Segment workingSegment;
         private ushort workingOffset = 0;
 
-        private byte tempLow = 0;
-        private byte tempHigh = 0;
+        private byte temp = 0;
 
-        private ushort Temp
-        {
-            get
-            {
-                return (ushort)((tempHigh << 8) | tempLow);
-            }
-            set
-            {
-                tempHigh = (byte)((value & 0xFF00) << 8);
-                tempLow = (byte)(value & 0x00FF);
-            }
-        }
+        private readonly Queue<byte> InstructionQueue = new Queue<byte>(6);
+
+        public event EventHandler<GeneralRegisterChangeEventArgs> GeneralRegisterChangeEvent;
+        public event EventHandler<FlagChangeEventArgs> FlagRegisterChangeEvent;
+        public event EventHandler<SegmentChangeEventArgs> SegmentChangeEvent;
+        public event EventHandler<InstructionPointerChangeEventArgs> InstructionPointerChangeEvent;
 
         private byte waitTicks = 0;
         private bool waiting = false;
 
         private bool handlingInterrupt = false;
 
-        private readonly Queue<byte> InstructionQueue = new Queue<byte>(6);
-
         public bool InterruptEnabled { get; set; }
 
-        private BusState s02;
+        private BusState _s02;
 
-        
+        private BusState S02
+        {
+            get => _s02;
+            set
+            {
+                _s02 = value;
+                fbc.S02 = _s02;
+            }
+        }
+
         public bool Test { get; set; } = true;
         public bool Lock { get; private set; } = true;
 
+        public InterruptController InterruptController { get; internal set; }
+        
+        public bool INTR { get; internal set; }
+        
+        public bool Nmi { get; internal set; } = false;
+
         private TState tState = TState.none;
+
         private TState nextState = TState.address;
 
         private enum TState
@@ -103,33 +95,34 @@ namespace SystemBoard.i8088
 
         public byte GetNextFromQueue()
         {
-            while (InstructionQueue.Count == 0) ;
-
+            while (InstructionQueue.Count == 0 && mainTimer.IsRunning) ;
+            if (!mainTimer.IsRunning)
+                return 0;
             return InstructionQueue.Dequeue();
         }
 
         #region IO
         public byte InByte(ushort port)
         {
-            while (tState != TState.clear || s02 == BusState.halt || handlingInterrupt) ;
+            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
-            workingSegment = Segment.absolute;
+            workingSegment = Segment.IO;
 
             workingOffset = port;
 
-            s02 = BusState.readPort;
+            S02 = BusState.readPort;
 
             mainTimer.TockEvent += on_tock_event;
 
-            while (tState != TState.clear) ;
+            while (nextState != TState.clear) ;
 
-            byte result = tempLow;
+            byte result = temp;
 
-            s02 = BusState.passive;
+            S02 = BusState.passive;
 
             return result;
         }
@@ -143,25 +136,32 @@ namespace SystemBoard.i8088
 
         public void OutByte(ushort port, byte value)
         {
-            while (tState != TState.clear || s02 == BusState.halt || handlingInterrupt) ;
+            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
-            workingSegment = Segment.absolute;
+            workingSegment = Segment.IO;
 
             workingOffset = port;
 
-            tempLow = value;
+            temp = value;
 
-            s02 = BusState.writePort;
+            S02 = BusState.writePort;
 
             mainTimer.TockEvent += on_tock_event;
 
-            while (tState != TState.clear) ;
+            while (nextState != TState.clear) ;
 
-            s02 = BusState.passive;
+            S02 = BusState.passive;
+        }
+
+        internal byte Inta()
+        {
+            S02 = BusState.interruptAcknowledge;
+            while (S02 == BusState.interruptAcknowledge) ;
+            return temp;
         }
 
         public void OutWord(ushort port, ushort value)
@@ -169,30 +169,30 @@ namespace SystemBoard.i8088
             OutByte(port, (byte)(value & 0xff));
             OutByte((ushort)(port + 1), (byte)((value & 0xff00) >> 8));
         }
-        #endregion // IO
+        #endregion IO
 
         #region MEMRW
         public byte ReadByte(Segment segment, ushort offset)
         {
-            while (tState != TState.clear || s02 == BusState.halt || handlingInterrupt) ;
+            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
             workingSegment = segment;
 
             workingOffset = offset;
 
-            s02 = BusState.readMemory;
+            S02 = BusState.readMemory;
 
             mainTimer.TockEvent += on_tock_event;
 
-            while (tState != TState.clear) ;
+            while (nextState != TState.clear) ;
 
-            byte result = tempLow;
+            byte result = temp;
 
-            s02 = BusState.passive;
+            S02 = BusState.passive;
 
             return result;
         }
@@ -206,25 +206,25 @@ namespace SystemBoard.i8088
 
         public void WriteByte(Segment segment, ushort offset, byte value)
         {
-            while (tState != TState.clear || s02 == BusState.halt || handlingInterrupt) ;
+            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
             workingSegment = segment;
 
             workingOffset = offset;
 
-            tempLow = value;
+            temp = value;
 
-            s02 = BusState.writeMemory;
+            S02 = BusState.writeMemory;
 
             mainTimer.TockEvent += on_tock_event;
 
-            while (tState != TState.clear) ;
+            while (nextState != TState.clear) ;
 
-            s02 = BusState.passive;
+            S02 = BusState.passive;
         }
 
         public void WriteWord(Segment segment, ushort offset, ushort value)
@@ -270,8 +270,8 @@ namespace SystemBoard.i8088
             if (!Test)
             {
                 mainTimer.TockEvent -= on_tock_event;
-                tState = TState.none;
-                s02 = BusState.passive;
+                nextState = TState.none;
+                S02 = BusState.passive;
                 waitTicks = 0;
                 mainTimer.TockEvent += wait_handler;
                 waiting = true;
@@ -282,9 +282,9 @@ namespace SystemBoard.i8088
 
         public void Halt()
         {
-            while (tState != TState.clear || s02 == BusState.halt || handlingInterrupt) ;
+            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
 
-            s02 = BusState.halt;
+            S02 = BusState.halt;
         }
 
         private void wait_handler(object sender, EventArgs e)
@@ -298,8 +298,8 @@ namespace SystemBoard.i8088
                     mainTimer.TockEvent -= wait_handler;
                     if (InstructionQueue.Count < 6)
                     {
-                        tState = TState.none;
-                        s02 = BusState.instructionFetch;
+                        nextState = TState.none;
+                        S02 = BusState.instructionFetch;
                     }
                     mainTimer.TockEvent += on_tock_event;
                 }
@@ -314,7 +314,7 @@ namespace SystemBoard.i8088
         #region EVENTHANDLERS
         private void single_cycle_write_handler(object sender, EventArgs e)
         {
-            tState = TState.none;
+            nextState = TState.none;
             mainTimer.TockEvent -= single_cycle_write_handler;
         }
 
@@ -329,10 +329,11 @@ namespace SystemBoard.i8088
                 tState = TState.wait;
             }
             //this should be set NLT T4 on each read/write cycle
-            switch (s02)
+            switch (S02)
             {
                 case BusState.interruptAcknowledge:
-                    throw new NotImplementedException();
+                    inta();
+                    break;
                 case BusState.readPort:
                     read_byte();
                     break;
@@ -353,15 +354,36 @@ namespace SystemBoard.i8088
                 case BusState.passive:
                     if (InstructionQueue.Count < 6)
                     {
-                        tState = TState.none;
-                        s02 = BusState.instructionFetch;
+                        nextState = TState.none;
+                        S02 = BusState.instructionFetch;
                     }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        private void on_general_register_change(object sender, GeneralRegisterChangeEventArgs e)
+        {
+            GeneralRegisterChangeEvent?.Invoke(sender, e);
+        }
+
+        private void on_flag_change(object sender, FlagChangeEventArgs e)
+        {
+            FlagRegisterChangeEvent?.Invoke(sender, e);
+        }
+
+        private void on_segment_change(object sender, SegmentChangeEventArgs e)
+        {
+            SegmentChangeEvent?.Invoke(sender, e);
+        }
         #endregion EVENTHANDLERS
+
+        #region WORKERS
+        private void inta()
+        {
+
+        }
 
         private void get_instruction()
         {
@@ -372,12 +394,12 @@ namespace SystemBoard.i8088
             }
             else if (tState == TState.clear)
             {
-                InstructionQueue.Enqueue(tempLow);
+                InstructionQueue.Enqueue(temp);
                 IP++;
 
-                if (InstructionQueue.Count == 6 && s02 == BusState.instructionFetch)
+                if (InstructionQueue.Count == 6 && S02 == BusState.instructionFetch)
                 {
-                    s02 = BusState.passive;
+                    S02 = BusState.passive;
                 }
             }
             read_byte();
@@ -404,7 +426,7 @@ namespace SystemBoard.i8088
                     nextState = TState.data;
                     break;
                 case TState.data: //begin T4
-                    tempLow = fbc.Data;
+                    temp = fbc.Data;
 
                     //#if DEBUG
                     //                        tempLow = memory[(segments[workingSegment] << 4) + workingOffset];
@@ -416,6 +438,7 @@ namespace SystemBoard.i8088
                     break;
                 case TState.clear:
                     //onBusCycleComplete.Invoke();
+                    fbc.Data = 0;
                     nextState = TState.none;
                     break;
             }
@@ -426,13 +449,16 @@ namespace SystemBoard.i8088
             switch (tState)
             {
                 case TState.none://begin T1
+                    //Kludge
+                    fbc.Data = temp;
+
                     fbc.Address = (segments[workingSegment] << 4) + workingOffset;
                     nextState = TState.address;
                     break;
                 case TState.address: //begin T2
                     fbc.S34 = workingSegment;
                     fbc.S5 = InterruptEnabled;
-                    fbc.Data = tempLow;
+                    fbc.Data = temp;
                     nextState = TState.status;
                     break;
                 case TState.status: //begin T3
@@ -447,10 +473,12 @@ namespace SystemBoard.i8088
                 case TState.wait:
                     break;
                 case TState.clear:
+                    fbc.Data = 0;
                     nextState = TState.none;
                     break;
             }
         }
+        #endregion WORKERS
 
         #region JUMPS
         public void JumpNear(ushort offset)
@@ -459,7 +487,7 @@ namespace SystemBoard.i8088
 
             tState = TState.none;
 
-            s02 = BusState.instructionFetch;
+            S02 = BusState.instructionFetch;
 
             if ((offset & 0x8000) != 0)
             {
@@ -481,7 +509,7 @@ namespace SystemBoard.i8088
         {
             mainTimer.TockEvent -= on_tock_event;
 
-            s02 = BusState.instructionFetch;
+            S02 = BusState.instructionFetch;
 
             segments.CS = newCS;
 
@@ -496,7 +524,7 @@ namespace SystemBoard.i8088
         {
             mainTimer.TockEvent -= on_tock_event;
 
-            s02 = BusState.instructionFetch;
+            S02 = BusState.instructionFetch;
 
             IP = newIP;
 
@@ -507,13 +535,13 @@ namespace SystemBoard.i8088
 
         public void JumpToInterruptVector(ushort interrupt)
         {
-            ushort ip = ReadWord(Segment.absolute, (ushort)(interrupt * 4));
+            ushort ip = ReadWord(Segment.IO, (ushort)(interrupt * 4));
 
-            ushort cs = ReadWord(Segment.absolute, (ushort)((interrupt * 4) + 2));
+            ushort cs = ReadWord(Segment.IO, (ushort)((interrupt * 4) + 2));
 
             mainTimer.TockEvent -= on_tock_event;
 
-            s02 = BusState.instructionFetch;
+            S02 = BusState.instructionFetch;
 
             IP = ip;
 
@@ -523,7 +551,6 @@ namespace SystemBoard.i8088
 
             mainTimer.TockEvent += on_tock_event;
         }
-        #endregion //JUMPS
 
         public void JumpShort(byte offset)
         {
@@ -531,7 +558,7 @@ namespace SystemBoard.i8088
 
             tState = TState.none;
 
-            s02 = BusState.instructionFetch;
+            S02 = BusState.instructionFetch;
 
             if ((offset & 0x80) != 0)
             {
@@ -548,14 +575,44 @@ namespace SystemBoard.i8088
 
             mainTimer.TockEvent += on_tock_event;
         }
+        #endregion JUMPS
 
         public Processor(FrontSideBusController fbc)
-        {   segments.SegmentChangeHandler += on_segment_change;
+        {   
             executionUnit = new ExecutionUnit(this);
-            executionUnit.EUChangedEvent += on_eu_change;
+            segments.SegmentChangeHandler += on_segment_change;
+            executionUnit.GeneralRegisterChangeEvent += on_general_register_change;
+            executionUnit.FlagRegisterChangeEvent += on_flag_change;
             this.fbc = fbc;
+            workingSegment = Segment.CS;
+            IP = 0;
+            nextState = TState.none;
+            S02 = BusState.instructionFetch;
+        }
+
+        public void Start()
+        {
             mainTimer.TockEvent += on_tock_event;
             executionUnit.Run();
+        }
+
+        internal void Stop()
+        {
+            executionUnit.End();
+            mainTimer.TockEvent -= on_tock_event;
+            Thread.Sleep(10);
+            mainTimer.IsRunning = false;
+            nextState = TState.clear;
+        }
+
+        internal Tuple<SegmentRegisters,ushort,GeneralRegisters,FlagRegister> GetRegisters()
+        {
+            return new Tuple<SegmentRegisters, ushort, GeneralRegisters, FlagRegister>(segments, IP, executionUnit.Registers, executionUnit.flags);
+        }
+
+        internal void Intr()
+        {
+
         }
     }
 }

@@ -5,7 +5,7 @@ namespace SystemBoard.i8088
     //TODO: make exception messages meaningful
     public class FlagRegister
     {
-        public event EventHandler FlagsChangeHandler;
+        public event EventHandler<FlagChangeEventArgs> FlagsChangeHandler;
 
         private bool cFlag; // 0b000000001 1
         private bool pFlag; // 4
@@ -23,7 +23,7 @@ namespace SystemBoard.i8088
             set
             {
                 cFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool PF
@@ -32,7 +32,7 @@ namespace SystemBoard.i8088
             set
             {
                 pFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool AF
@@ -40,7 +40,7 @@ namespace SystemBoard.i8088
             get => aFlag; set
             {
                 aFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool ZF
@@ -48,7 +48,7 @@ namespace SystemBoard.i8088
             get => zFlag; set
             {
                 zFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool SF
@@ -56,7 +56,7 @@ namespace SystemBoard.i8088
             get => sFlag; set
             {
                 sFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool TF
@@ -64,7 +64,7 @@ namespace SystemBoard.i8088
             get => tFlag; set
             {
                 tFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool IF
@@ -72,7 +72,7 @@ namespace SystemBoard.i8088
             get => iFlag; set
             {
                 iFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool DF
@@ -80,7 +80,7 @@ namespace SystemBoard.i8088
             get => dFlag; set
             {
                 dFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
         public bool OF
@@ -88,7 +88,7 @@ namespace SystemBoard.i8088
             get => oFlag; set
             {
                 oFlag = value;
-                FlagsChangeHandler?.Invoke(this, new EventArgs());
+                FlagsChangeHandler?.Invoke(this, new FlagChangeEventArgs(this));
             }
         }
 

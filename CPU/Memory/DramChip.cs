@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SystemBoard.Bus;
 
 namespace SystemBoard.Memory
 {
@@ -13,6 +14,8 @@ namespace SystemBoard.Memory
         {
             get => _baseAddress;
         }
+
+        public int Size { get; } = 16384;
 
         private byte[] data = new byte[16384];
 
@@ -30,6 +33,17 @@ namespace SystemBoard.Memory
         public void Write(int location, byte value)
         {
             data[location - _baseAddress] = value;
+        }
+
+        public byte[] ReadAll()
+        {
+            return data;
+        }
+
+        public byte this[int index]
+        {
+            get => data[index - _baseAddress];
+            set => data[index - _baseAddress] = value;
         }
     }
 }

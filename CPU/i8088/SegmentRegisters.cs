@@ -8,50 +8,55 @@ namespace SystemBoard.i8088
 {
     public enum Segment
     {
-        ES, SS, CS, DS, absolute = 98, none = 99
+        ES, SS, CS, DS, IO, none = 99
     }
 
     public class SegmentRegisters
     {
-        public event EventHandler SegmentChangeHandler;
+        public event EventHandler<SegmentChangeEventArgs> SegmentChangeHandler;
+
+        private ushort _es;
+        private ushort _ss;
+        private ushort _cs;
+        private ushort _ds;
 
         public ushort ES
         {
-            get => ES;
+            get => _es;
             set
             {
-                ES = value;
-                SegmentChangeHandler?.Invoke(this, new EventArgs());
+                _es = value;
+                SegmentChangeHandler?.Invoke(this, new SegmentChangeEventArgs(Segment.ES,_es,null));
             }
         }
 
         public ushort SS
         {
-            get => SS;
+            get => _ss;
             set
             {
-                SS = value;
-                SegmentChangeHandler?.Invoke(this, new EventArgs());
+                _ss = value;
+                SegmentChangeHandler?.Invoke(this, new SegmentChangeEventArgs(Segment.SS, _ss, null));
             }
         }
 
         public ushort CS
         {
-            get => CS;
+            get => _cs;
             set
             {
-                CS = value;
-                SegmentChangeHandler?.Invoke(this, new EventArgs());
+                _cs = value;
+                SegmentChangeHandler?.Invoke(this, new SegmentChangeEventArgs(Segment.CS, _cs, null));
             }
         }
 
         public ushort DS
         {
-            get => DS;
+            get => _ds;
             set
             {
-                DS = value;
-                SegmentChangeHandler?.Invoke(this, new EventArgs());
+                _ds = value;
+                SegmentChangeHandler?.Invoke(this, new SegmentChangeEventArgs(Segment.DS, _ds, null));
             }
         }
 
@@ -75,7 +80,7 @@ namespace SystemBoard.i8088
                         return CS;
                     case Segment.DS:
                         return DS;
-                    case Segment.absolute:
+                    case Segment.IO:
                         return 0;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -107,10 +112,10 @@ namespace SystemBoard.i8088
         {
             return new SegmentRegisters
             {
-                ES = ES,
-                SS = SS,
-                CS = CS,
-                DS = DS
+                _es = _es,
+                _ss = _ss,
+                _cs = _cs,
+                _ds = _ds
             };
         }
     }

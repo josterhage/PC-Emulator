@@ -24,6 +24,8 @@ namespace SystemClock
 
         private readonly Stopwatch stopwatch;
 
+        public bool IsRunning { get; set; } = true;
+
         public event EventHandler TockEvent; // I'm trying to ... mostly comply with .NET guidelines.
         public event EventHandler TwoTockEvent;
         public event EventHandler FourTockEvent;
@@ -54,7 +56,7 @@ namespace SystemClock
             {
                 stopwatch.Start();
             }
-            while (true)
+            while (IsRunning)
             {
                 if (stopwatch.ElapsedTicks >= ticks)
                 {

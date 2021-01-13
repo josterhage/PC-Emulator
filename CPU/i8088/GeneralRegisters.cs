@@ -20,7 +20,7 @@ namespace SystemBoard.i8088
 
     public class GeneralRegisters
     {
-        public event EventHandler RegisterChangeHandler;
+        public event EventHandler<GeneralRegisterChangeEventArgs> RegisterChangeHandler;
 
         // General purpose registers
         #region AX
@@ -33,7 +33,7 @@ namespace SystemBoard.i8088
             set
             {
                 ah = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.AX, AX));
             }
         }
 
@@ -43,7 +43,7 @@ namespace SystemBoard.i8088
             set
             {
                 al = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.AX, AX));
             }
         }
 
@@ -71,7 +71,7 @@ namespace SystemBoard.i8088
             set
             {
                 bh = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.BX,BX));
             }
         }
 
@@ -81,7 +81,7 @@ namespace SystemBoard.i8088
             set
             {
                 bl = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.BX, BX));
             }
         }
 
@@ -109,7 +109,7 @@ namespace SystemBoard.i8088
             set
             {
                 ch = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.CX, CX));
             }
         }
 
@@ -119,7 +119,7 @@ namespace SystemBoard.i8088
             set
             {
                 cl = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.CX, CX));
             }
         }
 
@@ -147,7 +147,7 @@ namespace SystemBoard.i8088
             set
             {
                 dh = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.DX, DX));
             }
         }
 
@@ -157,7 +157,7 @@ namespace SystemBoard.i8088
             set
             {
                 dl = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.DX, DX));
             }
         }
 
@@ -184,7 +184,7 @@ namespace SystemBoard.i8088
             set
             {
                 sp = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.SP,SP));
             }
         }
 
@@ -196,7 +196,7 @@ namespace SystemBoard.i8088
             set
             {
                 bp = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.BP, BP));
             }
         }
         #endregion
@@ -211,7 +211,7 @@ namespace SystemBoard.i8088
             set
             {
                 si = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.SI, SI));
             }
         }
 
@@ -223,7 +223,7 @@ namespace SystemBoard.i8088
             set
             {
                 di = value;
-                RegisterChangeHandler?.Invoke(this, new EventArgs());
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.DI, DI));
             }
         }
         #endregion

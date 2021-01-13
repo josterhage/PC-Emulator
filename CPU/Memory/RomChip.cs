@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SystemBoard.Bus;
 
 namespace SystemBoard.Memory
 {
@@ -15,6 +16,8 @@ namespace SystemBoard.Memory
         {
             get => _baseAddress;
         }
+
+        public int Size { get; } = 8192;
 
         private readonly byte[] data = new byte[8192];
 
@@ -49,6 +52,12 @@ namespace SystemBoard.Memory
             {
                 data[i] = result[i];
             }
+        }
+
+        public byte this[int index]
+        {
+            get => data[index - _baseAddress];
+            set { return; }
         }
     }
 }

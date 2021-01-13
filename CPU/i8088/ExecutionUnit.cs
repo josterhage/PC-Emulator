@@ -35,21 +35,20 @@ namespace SystemBoard.i8088
 
         public GeneralRegisters Registers { get; private set; } = new GeneralRegisters();
         public readonly FlagRegister flags = new FlagRegister();
-        private byte Opcode
+
+        private byte opcode;
+
+        public event EventHandler<GeneralRegisterChangeEventArgs> GeneralRegisterChangeEvent;
+        public event EventHandler<FlagChangeEventArgs> FlagRegisterChangeEvent;
+
+        private void on_general_register_change(object sender, GeneralRegisterChangeEventArgs e)
         {
-            get => Opcode;
-            set
-            {
-                Opcode = value;
-                EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), Opcode));
-            }
+            GeneralRegisterChangeEvent?.Invoke(sender, e);
         }
 
-        public event EventHandler<EUChangeEventArgs> EUChangedEvent;
-
-        private void on_register_change(object sender, EventArgs e)
+        private void on_flag_change(object sender, FlagChangeEventArgs e)
         {
-            EUChangedEvent?.Invoke(this, new EUChangeEventArgs(Registers.Clone(), flags.Clone(), Opcode));
+            FlagRegisterChangeEvent?.Invoke(sender, e);
         }
 
         private readonly Thread executionUnitThread;
@@ -58,13 +57,10 @@ namespace SystemBoard.i8088
 
         private bool isRunning = true;
 
-        private bool repInstruction = false;
-        private bool halted = false;
-
         public ExecutionUnit(Processor parent)
         {
-            Registers.RegisterChangeHandler += on_register_change;
-            flags.FlagsChangeHandler += on_register_change;
+            Registers.RegisterChangeHandler += on_general_register_change;
+            flags.FlagsChangeHandler += on_flag_change;
             this.parent = parent;
             InitializeInstructionSet();
             executionUnitThread = new Thread(new ThreadStart(run));
@@ -87,14 +83,38 @@ namespace SystemBoard.i8088
         {
             while (isRunning)
             {
-                //check for pending interrupt
-                Opcode = parent.GetNextFromQueue();
-                instructions[Opcode]?.Invoke();
+                if (parent.Nmi)
+                {
+                    pushf();
+                    flags.IF = false;
+                    flags.TF = false;
+                    flags.AF = false;
+                    push_cs();
+                    parent.WriteIPToStack(Registers.SP);
+                    Registers.SP -= 2;
+                    parent.JumpToInterruptVector(2);
+                }
+
+                if (parent.INTR && flags.IF)
+                {
+                    byte vector = parent.Inta();
+                    pushf();
+                    flags.IF = false;
+                    flags.TF = false;
+                    flags.AF = false;
+                    push_cs();
+                    parent.WriteIPToStack(Registers.SP);
+                    Registers.SP -= 2;
+                    parent.JumpToInterruptVector(vector);
+                }
+                opcode = parent.GetNextFromQueue();
+                instructions[opcode]?.Invoke();
                 zeroize_temps();
                 overrideSegment = Segment.DS;
             }
         }
 
+        #region TEMPREGS
         // Temporary Registers
 
         private void zeroize_temps()
@@ -161,7 +181,9 @@ namespace SystemBoard.i8088
                 tempCH = (byte)((value & 0xFF00) >> 8);
             }
         }
+        #endregion TEMPREGS
 
+        #region ENUMS
         // Enumerations
 
         private enum ModEncoding
@@ -183,7 +205,9 @@ namespace SystemBoard.i8088
             BP,   //0b110
             BX    //0b111
         }
+        #endregion ENUMS
 
+        #region INSTRUCTIONLIST
         //Instruction Set
 
         private Action[] instructions;
@@ -543,7 +567,9 @@ namespace SystemBoard.i8088
                         oxff            // 0xff
             };
         }
+        #endregion INSTRUCTIONLIST
 
+        #region 0x00-0x0f
         private void add_rm8_r8()
         {
             fetch_next_from_queue();
@@ -674,8 +700,8 @@ namespace SystemBoard.i8088
             //increment the stack pointer by two
             Registers.SP += 2;
             zeroize_temps();
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
         }
 
         private void or_rm8_r8()
@@ -808,7 +834,9 @@ namespace SystemBoard.i8088
                 registers.SP += 2;
             }
 #endif
+        #endregion 0x00-0x0f
 
+        #region 0x10-0x1f
         private void adc_rm8_r8()
         {
             fetch_next_from_queue();
@@ -939,8 +967,8 @@ namespace SystemBoard.i8088
             //increment the stack pointer by two
             Registers.SP += 2;
             zeroize_temps();
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
         }
 
         private void sbb_rm8_r8()
@@ -1068,10 +1096,12 @@ namespace SystemBoard.i8088
             parent.SetSegment(Segment.SS, TempA);
             Registers.SP += 2;
             zeroize_temps();
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
         }
+        #endregion 0x10-0x1f
 
+        #region 0x20-0x2f
         private void and_rm8_r8()
         {
             fetch_next_from_queue();
@@ -1364,7 +1394,9 @@ namespace SystemBoard.i8088
                 flags.CF = false;
             }
         }
+        #endregion 0x20-0x2f
 
+        #region 0x30-0x3f
         private void xor_rm8_r8()
         {
             fetch_next_from_queue();
@@ -1618,7 +1650,9 @@ namespace SystemBoard.i8088
         {
             throw new NotImplementedException();
         }
+        #endregion 0x30-0x3f
 
+        #region 0x40-0x4f
         private void inc_ax()
         {
             //AF, OF, PF, SF, ZF;
@@ -1779,7 +1813,9 @@ namespace SystemBoard.i8088
             set_sign(Registers.DI);
             flags.ZF = Registers.DI == 0;
         }
+        #endregion 0x40-0x4f
 
+        #region 0x50-0x5f
         private void push_ax()
         {
             Registers.SP -= 2;
@@ -1876,7 +1912,9 @@ namespace SystemBoard.i8088
             Registers.DI = parent.ReadWord(Segment.SS, Registers.SP);
             Registers.SP += 2;
         }
+        #endregion 0x50-0x5f
 
+        #region 0x70-0x7f
         private void jo()
         {
             fetch_next_from_queue();
@@ -2023,7 +2061,9 @@ namespace SystemBoard.i8088
                 parent.JumpShort(tempBL);
             }
         }
+        #endregion 0x70-0x7f
 
+        #region 0x80-0x8f
         private void o80h_rm8_i8()
         {
             fetch_next_from_queue();
@@ -2819,8 +2859,8 @@ namespace SystemBoard.i8088
             }
 
             zeroize_temps();
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
         }
 
         private void pop_rm16()
@@ -2836,7 +2876,9 @@ namespace SystemBoard.i8088
             Registers.SP += 2;
             parent.WriteWord(overrideSegment, TempC, TempA);
         }
+        #endregion 0x80-0x8f
 
+        #region 0x90-0x9f
         private void nop()
         {
             TempA = Registers.AX;
@@ -2961,7 +3003,9 @@ namespace SystemBoard.i8088
             tempAL = Registers.AH;
             flags.Flags = TempA;
         }
+        #endregion 0x90-0x9f
 
+        #region 0xa0-0xaf
         private void mov_al_m8()
         {
             fetch_next_from_queue();
@@ -3088,7 +3132,9 @@ namespace SystemBoard.i8088
             Registers.DI = flags.DF ? (ushort)(Registers.DI - 2) : (ushort)(Registers.DI + 2);
             TempB = set_flags_and_diff(Registers.AX, TempA);
         }
+        #endregion 0xa0-0xaf
 
+        #region 0xb0-0xbf
         private void mov_al_i8()
         {
             fetch_next_from_queue();
@@ -3204,7 +3250,9 @@ namespace SystemBoard.i8088
             tempCH = tempBL;
             Registers.SP = TempC;
         }
+        #endregion 0xb0-0xbf
 
+        #region 0xc0-0xcf
         //0xc0 and 0xc1 have no instructions
 
         private void ret_near_i16()
@@ -3336,10 +3384,12 @@ namespace SystemBoard.i8088
             parent.JumpFar(TempB, TempA);
             zeroize_temps();
             overrideSegment = Segment.DS;
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
         }
+        #endregion 0xc0-0xcf
 
+        #region 0xd0-0xdf
         private void rot_shift1_rm8()
         {
             fetch_next_from_queue();
@@ -3704,7 +3754,9 @@ namespace SystemBoard.i8088
                 return;
             }
         }
+        #endregion 0xd0-0xdf
 
+        #region 0xe0-0xef
         private void loopne_nz_i8()
         {
             Registers.CX--;
@@ -3845,7 +3897,9 @@ namespace SystemBoard.i8088
         {
             parent.OutWord(Registers.DX, Registers.AX);
         }
+        #endregion 0xe0-0xef
 
+        #region 0xf0-0xff
         private void lck()
         {
             parent.AssertLock();
@@ -3869,12 +3923,10 @@ namespace SystemBoard.i8088
             // cmps, scas
             if (tempBL == 0xa6 || tempBL == 0xa7 || tempBL == 0xae || tempBL == 0xaf)
             {
-                repInstruction = true;
                 instructions[tempBL].Invoke();
                 Registers.CX--;
                 if (Registers.CX == 0 || flags.ZF)
                 {
-                    repInstruction = false;
                     return;
                 }
             }
@@ -3888,12 +3940,10 @@ namespace SystemBoard.i8088
         {
             if (tempBL == 0xa4 || tempBL == 0xa5 || tempBL == 0xaa || tempBL == 0xab || tempBL == 0xac || tempBL == 0xad)
             {
-                repInstruction = true;
                 instructions[tempBL].Invoke();
                 Registers.CX--;
                 if (Registers.CX == 0 || !flags.ZF)
                 {
-                    repInstruction = false;
                     return;
                 }
             }
@@ -3901,7 +3951,7 @@ namespace SystemBoard.i8088
 
         private void halt()
         {
-            throw new NotImplementedException();
+            parent.Halt();
         }
 
         private void cmc()
@@ -4062,8 +4112,8 @@ namespace SystemBoard.i8088
         private void sti()
         {
             zeroize_temps();
-            Opcode = parent.GetNextFromQueue();
-            instructions[Opcode]?.Invoke();
+            opcode = parent.GetNextFromQueue();
+            instructions[opcode]?.Invoke();
             flags.IF = true;
         }
 
@@ -4164,7 +4214,9 @@ namespace SystemBoard.i8088
                     throw new InvalidOperationException();
             }
         }
+        #endregion 0xf0-0xff
 
+        #region HELPERS
         // Helper methods
         /// <summary>
         /// Builds the effective address for the current operation based on mod/rm and any relevant immediate values and stores it in TempC
@@ -4256,66 +4308,6 @@ namespace SystemBoard.i8088
         private void fetch_next_from_queue()
         {
             tempBL = parent.GetNextFromQueue();
-        }
-
-        /// <summary>
-        /// Asks the BIU to write the byte in tempAL to the memory address pointed at by tempC
-        /// tempBL contains segment override information if applicable
-        /// </summary>
-        private void byte_to_memory()
-        {
-            parent.WriteByte(overrideSegment, TempC, tempAL);
-        }
-
-        /// <summary>
-        /// Asks the BIU to write the byte in tempA to the memory address pointed at by tempC
-        /// tempBL contains segment override information if applicable
-        /// </summary>
-        private void word_to_memory()
-        {
-            //busInterfaceUnit.SetWord(overrideSegment, TempC, TempA);
-        }
-
-        /// <summary>
-        /// Asks the BIU to retrieve a byte from the memory address pointed at by tempC
-        /// byte is placed in TempBL
-        /// </summary>
-        private void byte_from_memory()
-        {
-            tempAL = parent.ReadByte(overrideSegment, TempC);
-        }
-
-        /// <summary>
-        /// Asks the BIU to retrieve a word from the memory address pointed at by tempC
-        /// word is placed in TempB
-        /// </summary>
-        private void word_from_memory()
-        {
-            TempA = parent.ReadByte(overrideSegment, TempC);
-        }
-
-        /// <summary>
-        /// Tells the BIU to increment the IP by tempCL
-        /// </summary>
-        private void jump_short()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Tells the BIU to change the IP to tempC
-        /// </summary>
-        private void jump_near()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Tells the BIU to change the CS to TempB and the IP to TempC
-        /// </summary>
-        private void jump_far()
-        {
-            throw new NotImplementedException();
         }
 
         private void set_sign(byte value)
@@ -4816,6 +4808,6 @@ namespace SystemBoard.i8088
 
             return value;
         }
-
+        #endregion HELPERS
     }
 }

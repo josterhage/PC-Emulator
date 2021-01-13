@@ -19,6 +19,7 @@ namespace SystemBoard.SystemClock
         private static MainTimer instance = null;
 
         private readonly long ticks; // the number of ticks produced by System.Diagnostics.Stopwatch in 1/10e6 seconds
+        private readonly long int8ticks;
 
         private int tocks = 0;
 
@@ -27,15 +28,17 @@ namespace SystemBoard.SystemClock
         private readonly Stopwatch stopwatch;
 
         public ulong TotalTicks { get; private set; } = 0;
+        public bool IsRunning { get; set; } = true;
 
         public event EventHandler<TimerEventArgs> TockEvent; // I'm trying to ... mostly comply with .NET guidelines.
         public event EventHandler<TimerEventArgs> TwoTockEvent;
         public event EventHandler<TimerEventArgs> FourTockEvent;
+        public event EventHandler<TimerEventArgs> Int8Event;
 
         private MainTimer()
         {
 #if DEBUG
-            ticks = Stopwatch.Frequency / 10; // 2hz processor ftw
+            ticks = Stopwatch.Frequency / 20;
 #else
 
             if (Stopwatch.IsHighResolution)
@@ -47,6 +50,7 @@ namespace SystemBoard.SystemClock
                 ticks = 1000000; // magic numbers, yay
             }
 #endif
+            int8ticks = Stopwatch.Frequency / 18; 
             stopwatch = new Stopwatch();
             timerThread = new Thread(new ThreadStart(counter_thread));
             timerThread.Start();
@@ -58,7 +62,7 @@ namespace SystemBoard.SystemClock
             {
                 stopwatch.Start();
             }
-            while (true)
+            while (IsRunning)
             {
                 if (stopwatch.ElapsedTicks >= ticks)
                 {

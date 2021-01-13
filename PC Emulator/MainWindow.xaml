@@ -5,8 +5,143 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PC_Emulator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" WindowState="Maximized" Width="1889" Height="1049" Background="#d4d0c8">
     <Grid>
+        <Canvas HorizontalAlignment="Left" VerticalAlignment="Top" Width="640" Height="400" Margin="20,20,0,0" Background="Black"/>
+        <GroupBox Header="Registers" HorizontalAlignment="Left" Height="258" Margin="665,20,0,0" VerticalAlignment="Top" Width="302" Background="White">
+            <Grid Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="4*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="AX:" TextWrapping="Wrap" Grid.Row="1" Grid.Column="0" FontFamily="Courier New"/>
+                <TextBlock Text="BX:" TextWrapping="Wrap" Grid.Row="3" Grid.Column="0" FontFamily="Courier New"/>
+                <TextBlock Text="CX:" TextWrapping="Wrap" Grid.Row="5" Grid.Column="0" FontFamily="Courier New"/>
+                <TextBlock Text="DX:" TextWrapping="Wrap" Grid.Row="7" Grid.Column="0" FontFamily="Courier New"/>
+
+                <TextBlock Text="H" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="0" Grid.Column="1" FontFamily="Courier New"/>
+                <TextBlock Text="L" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="0" Grid.Column="2" FontFamily="Courier New"/>
+                <TextBlock Text="H" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="2" Grid.Column="1" FontFamily="Courier New"/>
+                <TextBlock Text="L" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="2" Grid.Column="2" FontFamily="Courier New"/>
+                <TextBlock Text="H" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="4" Grid.Column="1" FontFamily="Courier New"/>
+                <TextBlock Text="L" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="4" Grid.Column="2" FontFamily="Courier New"/>
+                <TextBlock Text="H" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="6" Grid.Column="1" FontFamily="Courier New"/>
+                <TextBlock Text="L" VerticalAlignment="Bottom" TextWrapping="Wrap" TextAlignment="Center" Width="15" Grid.Row="6" Grid.Column="2" FontFamily="Courier New"/>
+
+                <TextBox Text="FFFF" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RegisterAX" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RegisterBX" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RegisterCX" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RegisterDX" FontFamily="Courier New"/>
+
+
+                <TextBlock Text="BP:" Grid.Column="4" Grid.Row="1" FontFamily="Courier New"/>
+                <TextBlock Text="SP:" Grid.Column="4" Grid.Row="3" FontFamily="Courier New"/>
+                <TextBlock Text="SI:" Grid.Column="4" Grid.Row="5" FontFamily="Courier New"/>
+                <TextBlock Text="DI:" Grid.Column="4" Grid.Row="7" FontFamily="Courier New"/>
+
+                <TextBox Text="FFFF" Grid.Column="5" Grid.Row="1" x:Name="RegisterBP" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="5" Grid.Row="3" x:Name="RegisterSP" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="5" Grid.Row="5" x:Name="RegisterSI" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="5" Grid.Row="7" x:Name="RegisterDI" FontFamily="Courier New"/>
+
+                <TextBlock Text="CS:" Grid.Column="7" Grid.Row="1" FontFamily="Courier New"/>
+                <TextBlock Text="DS:" Grid.Column="7" Grid.Row="3" FontFamily="Courier New"/>
+                <TextBlock Text="SS:" Grid.Column="7" Grid.Row="5" FontFamily="Courier New"/>
+                <TextBlock Text="ES:" Grid.Column="7" Grid.Row="7" FontFamily="Courier New"/>
+
+                <TextBox Text="FFFF" Grid.Column="8" Grid.Row="1" x:Name="RegisterCS" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="8" Grid.Row="3" x:Name="RegisterDS" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="8" Grid.Row="5" x:Name="RegisterSS" FontFamily="Courier New"/>
+                <TextBox Text="FFFF" Grid.Column="8" Grid.Row="7" x:Name="RegisterES" FontFamily="Courier New"/>
+
+                <TextBlock Text="IP:" Grid.Column="10" Grid.Row="1"  FontFamily="Courier New"/>
+
+                <TextBox Text="FFFF" Grid.Column="11" Grid.Row="1" x:Name="RegisterIP" FontFamily="Courier New"/>
+
+                <Grid Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="13">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*"/>
+                        <RowDefinition Height="3*"/>
+                        <RowDefinition Height="3*"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Flags" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="11" VerticalAlignment="Center" FontFamily="Courier New"/>
+
+                    <TextBlock Text="TF" Grid.Row="1" Grid.Column="0" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="DF" Grid.Row="1" Grid.Column="1" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="IF" Grid.Row="1" Grid.Column="2" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="OF" Grid.Row="1" Grid.Column="3" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="SF" Grid.Row="1" Grid.Column="4" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="ZF" Grid.Row="1" Grid.Column="5" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="AF" Grid.Row="1" Grid.Column="6" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="PF" Grid.Row="1" Grid.Column="7" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="CF" Grid.Row="1" Grid.Column="8" FontFamily="Courier New" HorizontalAlignment="Center" TextAlignment="Center"/>
+
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" x:Name="TFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" x:Name="DFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" x:Name="IFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="3" HorizontalAlignment="Center" x:Name="OFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="4" HorizontalAlignment="Center" x:Name="SFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="5" HorizontalAlignment="Center" x:Name="ZFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="6" HorizontalAlignment="Center" x:Name="AFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="7" HorizontalAlignment="Center" x:Name="PFBox"/>
+                    <RadioButton IsChecked="False" Grid.Row="2" Grid.Column="8" HorizontalAlignment="Center" x:Name="CFBox"/>
+                </Grid>
+            </Grid>
+        </GroupBox>
+        <TabControl HorizontalAlignment="Left" Height="316" Margin="665,283,0,0" VerticalAlignment="Top" Width="600">
+            <TabItem Header="Code Segment">
+                <ListView x:Name="CSListView"/>
+            </TabItem>
+            <TabItem Header="Data Segment">
+                <ListView x:Name="DSListView"/>
+            </TabItem>
+            <TabItem Header="Stack Segment">
+                <ListView x:Name="SSListView"/>
+            </TabItem>
+            <TabItem Header="Extra Segment">
+                <ListView x:Name="ESListView"/>
+            </TabItem>
+            <TabItem Header="IO Region">
+                <ListView x:Name="IOListView"/>
+            </TabItem>
+        </TabControl>
+        <Button Content="Start" HorizontalAlignment="Left" Margin="992,20,0,0" VerticalAlignment="Top" Click="Button_Click"/>
 
     </Grid>
 </Window>
