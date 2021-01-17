@@ -6,6 +6,22 @@
         xmlns:local="clr-namespace:PC_Emulator"
         mc:Ignorable="d"
         Title="MainWindow" WindowState="Maximized" Width="1889" Height="1049" Background="#d4d0c8">
+    <Window.Resources>
+        <Style TargetType="TextBlock" x:Key="SwitchBlockTitleText">
+            <Setter Property="FontFamily" Value="Arial"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="CheckBox" x:Key="SwitchBlockCheckBoxText">
+            <Setter Property="FontFamily" Value="Arial"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Canvas HorizontalAlignment="Left" VerticalAlignment="Top" Width="640" Height="400" Margin="20,20,0,0" Background="Black"/>
         <GroupBox Header="Registers" HorizontalAlignment="Left" Height="258" Margin="665,20,0,0" VerticalAlignment="Top" Width="302" Background="White">
@@ -141,7 +157,50 @@
                 <ListView x:Name="IOListView"/>
             </TabItem>
         </TabControl>
-        <Button Content="Start" HorizontalAlignment="Left" Margin="992,20,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-
+        <Button Content="Start" HorizontalAlignment="Left" Margin="44,441,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Grid HorizontalAlignment="Left" Height="247" Margin="972,31,0,0" VerticalAlignment="Top" Width="138" Background="#FFEE3232">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="SW1" Style="{DynamicResource SwitchBlockTitleText}"/>
+            <CheckBox Content="IPL 5 1/4" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="1" x:Name="Ipl5" IsChecked="True"/>
+            <CheckBox Content="Reserved" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="2" IsEnabled="False" IsChecked="True"/>
+            <CheckBox Content="RAM Size 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="3" x:Name="Ram0"/>
+            <CheckBox Content="RAM Size 1" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="4" x:Name="Ram1"/>
+            <CheckBox Content="Display Type 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="5" IsChecked="True" x:Name="Display0"/>
+            <CheckBox Content="Display Type 1" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="6" IsChecked="True" x:Name="Display1"/>
+            <CheckBox Content="5 1/4&quot; Count" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="7" x:Name="FloppyCount0" IsChecked="True"/>
+            <CheckBox Content="5 1/4&quot; Count" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="8" x:Name="FloppyCount1" IsChecked="True"/>
+        </Grid>
+        <Grid HorizontalAlignment="Left" Height="247" Margin="1115,31,0,0" VerticalAlignment="Top" Width="138" Background="#FFEE3232">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="SW2" Style="{DynamicResource SwitchBlockTitleText}"/>
+            <CheckBox Content="I/O RAM 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="1" x:Name="IoRam0"/>
+            <CheckBox Content="I/O RAM 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="2" x:Name="IoRam1"/>
+            <CheckBox Content="I/O RAM 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="3" x:Name="IoRam2"/>
+            <CheckBox Content="I/O RAM 0" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="4" x:Name="IoRam3"/>
+            <CheckBox Content="Reserved" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="5" IsEnabled="False"/>
+            <CheckBox Content="Reserved" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="6" IsEnabled="False"/>
+            <CheckBox Content="Reserved" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="7" IsEnabled="False"/>
+            <CheckBox Content="Reserved" Style="{DynamicResource SwitchBlockCheckBoxText}" Grid.Row="8" IsEnabled="False"/>
+        </Grid>
     </Grid>
 </Window>

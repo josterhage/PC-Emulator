@@ -9,6 +9,7 @@ using SystemBoard.Memory;
 using SystemBoard.Bus;
 using SystemBoard.SystemClock;
 using SystemBoard.Keyboard;
+using SystemBoard.i8255;
 
 namespace SystemBoard
 {
@@ -26,39 +27,60 @@ namespace SystemBoard
         private readonly MemoryBusController memoryBus;
         private readonly IOBusController ioBus;
         private readonly RomChip programRom;
-        private readonly DramChip baseRam;
         private readonly InterruptController interruptController;
-        
+        private readonly PeripheralInterface peripheralInterface;
+
         //private readonly List<IMemoryLocation> memoryLocations;
 
         public MainBoard(IKeyboardConverter keyboardConverter)
         {
-            keyboardConverter.PcKeyEvent += OnPcKeyEvent;
-
-            baseRam = new DramChip(0);
-            programRom = new RomChip(0xfe000, @"C:\Users\joste\OneDrive\Documents\Code\5150 Emulator\asmscratch\one.o");
             memoryBus = new MemoryBusController();
-            memoryBus.Register(baseRam);
-            memoryBus.Register(programRom);
-            memoryBus.MemoryChangeEvent += OnMemoryChangeEvent;
-
             ioBus = new IOBusController();
-            interruptController = new InterruptController(Cpu, frontSideBus, 0x20);
-            ioBus.Register(interruptController);
-
-
             frontSideBus = new FrontSideBusController(memoryBus, ioBus);
-
             Cpu = new Processor(frontSideBus);
+            programRom = new RomChip(0xfe000, @"C:\Users\joste\OneDrive\Documents\Code\5150 Emulator\asmscratch\one.o");
+            interruptController = new InterruptController(Cpu, frontSideBus, 0x20);
+            peripheralInterface = new PeripheralInterface(new KeyboardController(interruptController));
+
             Cpu.SegmentChangeEvent += OnSegmentChangeEvent;
             Cpu.GeneralRegisterChangeEvent += OnGeneralRegisterChangeEvent;
             Cpu.InstructionPointerChangeEvent += OnInstructionPointerChangeEvent;
             Cpu.FlagRegisterChangeEvent += OnFlagChangeEvent;
             Cpu.InterruptController = interruptController;
+
+            memoryBus.Register(programRom);
+            memoryBus.MemoryChangeEvent += OnMemoryChangeEvent;
+
+            ioBus.Register(interruptController);
+            ioBus.Register(peripheralInterface);
+
+            keyboardConverter.PcKeyEvent += OnPcKeyEvent;
+            PcKeyEvent += peripheralInterface.OnPcKeyEvent;
         }
 
-        public void Start()
+        private void setup_ram(ushort dipswitchWord)
         {
+            byte boardRam = (byte)((dipswitchWord & 12) >> 2);
+            for (int i = 0; i <= boardRam; i++)
+            {
+                memoryBus.Register(new DramChip(i * 16384));
+            }
+
+            if (boardRam < 3)
+                return;
+
+            byte expansionRam = (byte)((dipswitchWord & 0x0f00) >> 8);
+
+            for(int i = 0; i <= expansionRam; i++)
+            {
+                memoryBus.Register(new ExpansionRam(65536 + (i * 32768)));
+            }
+        }
+
+        public void Start(ushort optionSwitches)
+        {
+            peripheralInterface.SetSwitches(optionSwitches);
+            setup_ram(optionSwitches);
             Cpu.Start();
         }
 
@@ -80,7 +102,7 @@ namespace SystemBoard
         protected void OnSegmentChangeEvent(object sender, SegmentChangeEventArgs e)
         {
             e.SegmentMap = memoryBus.GetSegmentMap(e.Value << 4);
-            SegmentChangeEvent?.Invoke(sender,e);
+            SegmentChangeEvent?.Invoke(sender, e);
         }
 
         protected void OnGeneralRegisterChangeEvent(object sender, GeneralRegisterChangeEventArgs e)
@@ -93,7 +115,7 @@ namespace SystemBoard
             InstructionPointerChangeEvent?.Invoke(sender, e);
         }
 
-        protected void OnFlagChangeEvent(object sender,FlagChangeEventArgs e)
+        protected void OnFlagChangeEvent(object sender, FlagChangeEventArgs e)
         {
             FlagChangeEvent?.Invoke(sender, e);
         }

@@ -313,7 +313,18 @@ namespace PC_Emulator
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            motherboard.Start();
+            ushort switches = (byte)((bool)Ipl5.IsChecked ? 1 : 0);
+            switches |= (byte)((bool)Ram0.IsChecked ? 4 : 0);
+            switches |= (byte)((bool)Ram1.IsChecked ? 8 : 0);
+            switches |= (byte)((bool)Display0.IsChecked ? 16 : 0);
+            switches |= (byte)((bool)Display1.IsChecked ? 32 : 0);
+            switches |= (byte)((bool)FloppyCount0.IsChecked ? 64 : 0);
+            switches |= (byte)((bool)FloppyCount1.IsChecked ? 128 : 0);
+            switches |= (byte)((bool)IoRam0.IsChecked ? 256 : 0);
+            switches |= (byte)((bool)IoRam1.IsChecked ? 512 : 0);
+            switches |= (byte)((bool)IoRam2.IsChecked ? 1024 : 0);
+            switches |= (byte)((bool)IoRam3.IsChecked ? 2048 : 0);
+            motherboard.Start(switches);
         }
     }
 }

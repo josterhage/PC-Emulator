@@ -104,7 +104,7 @@ namespace SystemBoard.i8088
         #region IO
         public byte InByte(ushort port)
         {
-            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
+            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -136,7 +136,7 @@ namespace SystemBoard.i8088
 
         public void OutByte(ushort port, byte value)
         {
-            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
+            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -174,7 +174,7 @@ namespace SystemBoard.i8088
         #region MEMRW
         public byte ReadByte(Segment segment, ushort offset)
         {
-            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
+            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -206,7 +206,7 @@ namespace SystemBoard.i8088
 
         public void WriteByte(Segment segment, ushort offset, byte value)
         {
-            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
+            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -282,9 +282,9 @@ namespace SystemBoard.i8088
 
         public void Halt()
         {
-            while (tState != TState.clear || S02 == BusState.halt || handlingInterrupt) ;
-
             S02 = BusState.halt;
+
+            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
         }
 
         private void wait_handler(object sender, EventArgs e)
@@ -382,7 +382,24 @@ namespace SystemBoard.i8088
         #region WORKERS
         private void inta()
         {
-
+            switch (tState)
+            {
+                case TState.none:
+                    InterruptController.Inta();
+                    nextState = TState.data;
+                    break;
+                case TState.data:
+                    temp = fbc.Data;
+                    nextState = TState.clear;
+                    break;
+                case TState.clear:
+                    fbc.Data = 0;
+                    nextState = TState.none;
+                    S02 = BusState.passive;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         private void get_instruction()
@@ -485,7 +502,7 @@ namespace SystemBoard.i8088
         {
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
             S02 = BusState.instructionFetch;
 
@@ -509,6 +526,8 @@ namespace SystemBoard.i8088
         {
             mainTimer.TockEvent -= on_tock_event;
 
+            nextState = TState.none;
+
             S02 = BusState.instructionFetch;
 
             segments.CS = newCS;
@@ -523,6 +542,8 @@ namespace SystemBoard.i8088
         public void JumpImmediate(ushort newIP)
         {
             mainTimer.TockEvent -= on_tock_event;
+
+            nextState = TState.none;
 
             S02 = BusState.instructionFetch;
 
@@ -541,6 +562,8 @@ namespace SystemBoard.i8088
 
             mainTimer.TockEvent -= on_tock_event;
 
+            nextState = TState.none;
+
             S02 = BusState.instructionFetch;
 
             IP = ip;
@@ -556,7 +579,7 @@ namespace SystemBoard.i8088
         {
             mainTimer.TockEvent -= on_tock_event;
 
-            tState = TState.none;
+            nextState = TState.none;
 
             S02 = BusState.instructionFetch;
 
@@ -569,6 +592,7 @@ namespace SystemBoard.i8088
             else
             {
                 IP += offset;
+                IP--;
             }
 
             InstructionQueue.Clear();
@@ -603,6 +627,7 @@ namespace SystemBoard.i8088
             Thread.Sleep(10);
             mainTimer.IsRunning = false;
             nextState = TState.clear;
+            tState = TState.clear;
         }
 
         internal Tuple<SegmentRegisters,ushort,GeneralRegisters,FlagRegister> GetRegisters()

@@ -8,33 +8,46 @@ using SystemBoard.i8259;
 
 namespace SystemBoard.Keyboard
 {
-    public class KeyboardController : IPeripheral
+    public class KeyboardController
     {
-        private readonly PeripheralInterface ppi;
         private readonly InterruptController interruptController;
-        private byte scanCode;
+        private readonly Queue<byte> scanCodeBuffer;
+        private const int MAX_BUFFER = 20;
 
-        public KeyboardController(EventHandler<PcKeyEventArgs> pcKeyHandler, PeripheralInterface ppi, InterruptController interruptController)
+        public bool PB6 { get; set; }
+
+        public KeyboardController(InterruptController interruptController)
         {
-            pcKeyHandler += OnPcKeyEvent;
-            this.ppi = ppi;
             this.interruptController = interruptController;
+            scanCodeBuffer = new Queue<byte>(MAX_BUFFER);
         }
 
-        protected void OnPcKeyEvent(object sender, PcKeyEventArgs e)
+        public void OnPcKeyEvent(object sender, PcKeyEventArgs e)
         {
-            scanCode = e.ScanCode;
-            interruptController.IRQ(1);
+            if (!PB6)
+                return;
+            if(scanCodeBuffer.Count < MAX_BUFFER)
+            {
+                scanCodeBuffer.Enqueue(e.ScanCode);
+            }
+            else
+            {
+                interruptController.IRQ(1);
+            }
         }
 
         public byte Get()
         {
-            throw new NotImplementedException();
+            if (scanCodeBuffer.Count > 0)
+                return scanCodeBuffer.Dequeue();
+            else
+                return 0;
         }
 
         public void Set(byte data)
         {
-            throw new NotImplementedException();
+            //silent failure
+            return;
         }
     }
 }

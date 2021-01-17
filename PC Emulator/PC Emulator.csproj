@@ -11,4 +11,8 @@
     <ProjectReference Include="..\CPU\SystemBoard.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Themes\" />
+  </ItemGroup>
+
 </Project>

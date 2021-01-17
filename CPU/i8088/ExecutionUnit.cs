@@ -2843,13 +2843,13 @@ namespace SystemBoard.i8088
             if ((ModEncoding)((tempBL & 0xc0) >> 6) == ModEncoding.registerRegister)
             {
                 var srcReg = (WordGeneral)(tempBL & 0x07);
-                var destReg = (Segment)((tempBL & 0x38) >> 3);
+                var destReg = (Segment)((tempBL & 0x18) >> 3);
 
                 parent.SetSegment(destReg, Registers[srcReg]);
             }
             else
             {
-                var destReg = (Segment)((tempBL & 0x38) >> 3);
+                var destReg = (Segment)((tempBL & 0x18) >> 3);
 
                 build_effective_address();
 
@@ -2859,6 +2859,7 @@ namespace SystemBoard.i8088
             }
 
             zeroize_temps();
+            overrideSegment = Segment.DS;
             opcode = parent.GetNextFromQueue();
             instructions[opcode]?.Invoke();
         }
@@ -2992,12 +2993,12 @@ namespace SystemBoard.i8088
             Registers.SP += 2;
         }
 
-        private void sahf()
+        private void lahf()
         {
             Registers.AH = (byte)(flags.Flags & 0xff);
         }
 
-        private void lahf()
+        private void sahf()
         {
             TempA = flags.Flags;
             tempAL = Registers.AH;

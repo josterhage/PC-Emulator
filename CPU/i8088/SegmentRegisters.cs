@@ -8,7 +8,7 @@ namespace SystemBoard.i8088
 {
     public enum Segment
     {
-        ES, SS, CS, DS, IO, none = 99
+        ES, CS, SS, DS, IO, none = 99
     }
 
     public class SegmentRegisters

@@ -7,21 +7,20 @@ using SystemBoard.Bus;
 
 namespace SystemBoard.Memory
 {
-    public class DramChip : IMemoryLocation
+    public class ExpansionRam : IMemoryLocation
     {
         private readonly int _baseAddress;
 
         public int BaseAddress => _baseAddress;
 
-        public int Size => 16384;
+        public int Size => 32768;
 
-        private readonly byte[] data = new byte[16384];
+        private readonly byte[] data = new byte[32768];
 
-        public DramChip(int baseAddress)
+        public ExpansionRam(int baseAddress)
         {
             _baseAddress = baseAddress;
         }
-
 
         public byte Read(int location)
         {

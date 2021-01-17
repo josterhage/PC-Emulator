@@ -55,9 +55,7 @@
     <Compile Include="i8088\ExecutionUnit.cs" />
     <Compile Include="i8088\GeneralRegisters.cs" />
     <Compile Include="i8088\Processor.cs" />
-    <Compile Include="i8255\IPeripheral.cs" />
     <Compile Include="i8255\PeripheralInterface.cs" />
-    <Compile Include="i8255\Port60.cs" />
     <Compile Include="i8259\InterruptController.cs" />
     <Compile Include="Bus\IMemoryLocation.cs" />
     <Compile Include="Keyboard\IKeyboardConverter.cs" />
@@ -65,6 +63,7 @@
     <Compile Include="MainBoard.cs" />
     <Compile Include="Memory\DramChip.cs" />
     <Compile Include="Bus\MemoryChangeEventArgs.cs" />
+    <Compile Include="Memory\ExpansionRam.cs" />
     <Compile Include="PcKeyEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Memory\RomChip.cs" />
