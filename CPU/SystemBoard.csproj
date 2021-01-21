@@ -55,6 +55,9 @@
     <Compile Include="i8088\ExecutionUnit.cs" />
     <Compile Include="i8088\GeneralRegisters.cs" />
     <Compile Include="i8088\Processor.cs" />
+    <Compile Include="i8237\DmaController.cs" />
+    <Compile Include="i8237\PageRegister.cs" />
+    <Compile Include="i8237\PageRegisterChangeEventArgs.cs" />
     <Compile Include="i8255\PeripheralInterface.cs" />
     <Compile Include="i8259\InterruptController.cs" />
     <Compile Include="Bus\IMemoryLocation.cs" />
@@ -64,6 +67,7 @@
     <Compile Include="Memory\DramChip.cs" />
     <Compile Include="Bus\MemoryChangeEventArgs.cs" />
     <Compile Include="Memory\ExpansionRam.cs" />
+    <Compile Include="NmiMask.cs" />
     <Compile Include="PcKeyEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Memory\RomChip.cs" />
