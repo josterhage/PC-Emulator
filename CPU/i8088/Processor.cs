@@ -10,7 +10,7 @@ using SystemBoard.i8259;
 
 namespace SystemBoard.i8088
 {
-    public class Processor 
+    public class Processor
     {
         private readonly ExecutionUnit executionUnit;
         private readonly FrontSideBusController fbc;
@@ -44,8 +44,6 @@ namespace SystemBoard.i8088
         private byte waitTicks = 0;
         private bool waiting = false;
 
-        private bool handlingInterrupt = false;
-
         public bool InterruptEnabled { get; set; }
 
         private BusState _s02;
@@ -64,9 +62,9 @@ namespace SystemBoard.i8088
         public bool Lock { get; private set; } = true;
 
         public InterruptController InterruptController { get; internal set; }
-        
+
         public bool INTR { get; internal set; }
-        
+
         public bool Nmi { get; internal set; } = false;
 
         private TState tState = TState.none;
@@ -104,7 +102,7 @@ namespace SystemBoard.i8088
         #region IO
         public byte InByte(ushort port)
         {
-            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
+            while ((tState != TState.clear || S02 == BusState.halt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -136,7 +134,7 @@ namespace SystemBoard.i8088
 
         public void OutByte(ushort port, byte value)
         {
-            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
+            while ((tState != TState.clear || S02 == BusState.halt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -174,7 +172,7 @@ namespace SystemBoard.i8088
         #region MEMRW
         public byte ReadByte(Segment segment, ushort offset)
         {
-            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
+            while ((tState != TState.clear || S02 == BusState.halt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -206,7 +204,7 @@ namespace SystemBoard.i8088
 
         public void WriteByte(Segment segment, ushort offset, byte value)
         {
-            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
+            while ((tState != TState.clear || S02 == BusState.halt) && mainTimer.IsRunning) ;
 
             mainTimer.TockEvent -= on_tock_event;
 
@@ -257,12 +255,12 @@ namespace SystemBoard.i8088
         #region BUSCONTROL
         public void AssertLock()
         {
-            Lock = false;
+            fbc.Lock = true;
         }
 
         public void DeassertLock()
         {
-            Lock = true;
+            fbc.Lock = false;
         }
 
         public void Wait()
@@ -284,7 +282,7 @@ namespace SystemBoard.i8088
         {
             S02 = BusState.halt;
 
-            while ((tState != TState.clear || S02 == BusState.halt || handlingInterrupt) && mainTimer.IsRunning) ;
+            while ((tState != TState.clear || S02 == BusState.halt) && mainTimer.IsRunning) ;
         }
 
         private void wait_handler(object sender, EventArgs e)
@@ -320,7 +318,7 @@ namespace SystemBoard.i8088
 
         private void on_tock_event(object sender, TimerEventArgs e)
         {
-            if (e.Ready)
+            if (e.Ready && !fbc.Hold)
             {
                 tState = nextState;
             }
@@ -441,9 +439,10 @@ namespace SystemBoard.i8088
                     break;
                 case TState.status: //begin T3
                     nextState = TState.data;
+                    temp = fbc.Data;
                     break;
                 case TState.data: //begin T4
-                    temp = fbc.Data;
+
 
                     //#if DEBUG
                     //                        tempLow = memory[(segments[workingSegment] << 4) + workingOffset];
@@ -602,7 +601,7 @@ namespace SystemBoard.i8088
         #endregion JUMPS
 
         public Processor(FrontSideBusController fbc)
-        {   
+        {
             executionUnit = new ExecutionUnit(this);
             segments.SegmentChangeHandler += on_segment_change;
             executionUnit.GeneralRegisterChangeEvent += on_general_register_change;
@@ -630,14 +629,9 @@ namespace SystemBoard.i8088
             tState = TState.clear;
         }
 
-        internal Tuple<SegmentRegisters,ushort,GeneralRegisters,FlagRegister> GetRegisters()
+        internal Tuple<SegmentRegisters, ushort, GeneralRegisters, FlagRegister> GetRegisters()
         {
             return new Tuple<SegmentRegisters, ushort, GeneralRegisters, FlagRegister>(segments, IP, executionUnit.Registers, executionUnit.flags);
-        }
-
-        internal void Intr()
-        {
-
         }
     }
 }
