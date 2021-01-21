@@ -57,6 +57,7 @@ namespace SystemBoard.i8088
             {
                 ah = (byte)((value & 0xFF00) >> 8);
                 al = (byte)(value & 0x00FF);
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.AX, AX));
             }
         }
         #endregion
@@ -95,6 +96,7 @@ namespace SystemBoard.i8088
             {
                 bh = (byte)((value & 0xFF00) >> 8);
                 bl = (byte)(value & 0x00FF);
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.BX, BX));
             }
         }
         #endregion
@@ -133,6 +135,7 @@ namespace SystemBoard.i8088
             {
                 ch = (byte)((value & 0xFF00) >> 8);
                 cl = (byte)(value & 0x00FF);
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.CX, CX));
             }
         }
         #endregion
@@ -171,6 +174,7 @@ namespace SystemBoard.i8088
             {
                 dh = (byte)((value & 0xFF00) >> 8);
                 dl = (byte)(value & 0x00FF);
+                RegisterChangeHandler?.Invoke(this, new GeneralRegisterChangeEventArgs(WordGeneral.DX, DX));
             }
         }
         #endregion
