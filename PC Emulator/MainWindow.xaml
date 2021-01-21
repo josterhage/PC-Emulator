@@ -157,7 +157,7 @@
                 <ListView x:Name="IOListView"/>
             </TabItem>
         </TabControl>
-        <Button Content="Start" HorizontalAlignment="Left" Margin="44,441,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Button Content="Start" HorizontalAlignment="Left" Margin="44,441,0,0" VerticalAlignment="Top" Click="button_click"/>
         <Grid HorizontalAlignment="Left" Height="247" Margin="972,31,0,0" VerticalAlignment="Top" Width="138" Background="#FFEE3232">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
