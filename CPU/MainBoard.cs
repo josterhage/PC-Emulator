@@ -10,6 +10,7 @@ using SystemBoard.Bus;
 using SystemBoard.SystemClock;
 using SystemBoard.Keyboard;
 using SystemBoard.i8255;
+using SystemBoard.i8237;
 
 namespace SystemBoard
 {
@@ -29,6 +30,8 @@ namespace SystemBoard
         private readonly RomChip programRom;
         private readonly InterruptController interruptController;
         private readonly PeripheralInterface peripheralInterface;
+        private readonly DmaController dmaController;
+        private readonly PageRegister pageRegister;
 
         //private readonly List<IMemoryLocation> memoryLocations;
 
@@ -36,11 +39,13 @@ namespace SystemBoard
         {
             memoryBus = new MemoryBusController();
             ioBus = new IOBusController();
-            frontSideBus = new FrontSideBusController(memoryBus, ioBus);
+            dmaController = new DmaController();
+            frontSideBus = new FrontSideBusController(memoryBus, ioBus, dmaController);
             Cpu = new Processor(frontSideBus);
             programRom = new RomChip(0xfe000, @"C:\Users\joste\OneDrive\Documents\Code\5150 Emulator\asmscratch\one.o");
             interruptController = new InterruptController(Cpu, frontSideBus, 0x20);
             peripheralInterface = new PeripheralInterface(new KeyboardController(interruptController));
+            pageRegister = new PageRegister();
 
             Cpu.SegmentChangeEvent += OnSegmentChangeEvent;
             Cpu.GeneralRegisterChangeEvent += OnGeneralRegisterChangeEvent;
@@ -53,9 +58,14 @@ namespace SystemBoard
 
             ioBus.Register(interruptController);
             ioBus.Register(peripheralInterface);
+            ioBus.Register(new NmiMask());
+            ioBus.Register(dmaController);
+            ioBus.Register(pageRegister);
 
             keyboardConverter.PcKeyEvent += OnPcKeyEvent;
             PcKeyEvent += peripheralInterface.OnPcKeyEvent;
+
+            dmaController.RegisterPageRegisterChangeEvent(pageRegister);
         }
 
         private void setup_ram(ushort dipswitchWord)
@@ -71,7 +81,7 @@ namespace SystemBoard
 
             byte expansionRam = (byte)((dipswitchWord & 0x0f00) >> 8);
 
-            for(int i = 0; i <= expansionRam; i++)
+            for (int i = 0; i <= expansionRam; i++)
             {
                 memoryBus.Register(new ExpansionRam(65536 + (i * 32768)));
             }
