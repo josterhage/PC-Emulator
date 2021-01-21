@@ -27,7 +27,7 @@ namespace PC_Emulator
     {
         private readonly MainBoard motherboard;
         private readonly KeyboardConverter keyboardConverter;
-        private MainTimer systemTimer = MainTimer.GetInstance();
+        private readonly MainTimer systemTimer = MainTimer.GetInstance();
         private int es;
         private int ss;
         private int cs;
@@ -273,24 +273,14 @@ namespace PC_Emulator
             int seg;
             for (int i = 0; i < 4; i++)
             {
-                switch (i)
+                seg = i switch
                 {
-                    case 0:
-                        seg = es << 4;
-                        break;
-                    case 1:
-                        seg = cs << 4;
-                        break;
-                    case 2:
-                        seg = ds << 4;
-                        break;
-                    case 3:
-                        seg = ss << 4;
-                        break;
-                    default:
-                        seg = 0;
-                        break;
-                }
+                    0 => es << 4,
+                    1 => cs << 4,
+                    2 => ds << 4,
+                    3 => ss << 4,
+                    _ => 0,
+                };
                 if (seg < location && location < (seg + 65536))
                 {
                     Segment[] temp = new Segment[segs + 1];
@@ -311,7 +301,7 @@ namespace PC_Emulator
             base.OnClosing(e);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void button_click(object sender, RoutedEventArgs e)
         {
             ushort switches = (byte)((bool)Ipl5.IsChecked ? 1 : 0);
             switches |= (byte)((bool)Ram0.IsChecked ? 4 : 0);
