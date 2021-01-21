@@ -29,9 +29,9 @@ namespace SystemBoard.i8088
     {
         //TODO: does the execution unit need timer access? its operation is asynchronous by nature: it gets data from the queue one byte at a time, works on it, and blocks when no new data is available
         private readonly MainTimer mainTimer = MainTimer.GetInstance();
+        
         //necessary
         private readonly Processor parent;
-
 
         public GeneralRegisters Registers { get; private set; } = new GeneralRegisters();
         public readonly FlagRegister flags = new FlagRegister();
@@ -107,6 +107,7 @@ namespace SystemBoard.i8088
                     Registers.SP -= 2;
                     parent.JumpToInterruptVector(vector);
                 }
+
                 opcode = parent.GetNextFromQueue();
                 instructions[opcode]?.Invoke();
                 zeroize_temps();
@@ -4508,7 +4509,7 @@ namespace SystemBoard.i8088
 
         private ushort set_flags_and_imul(byte dest, byte src)
         {
-            short result = 0;
+            short result;
             result = (short)(dest * src);
             ushort signtest = (ushort)(result & 0xff);
             signtest |= (ushort)(((signtest & 0x80) != 0) ? 0xff00 : 0);
