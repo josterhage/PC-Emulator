@@ -12,7 +12,7 @@ namespace SystemBoard.Bus
 {
 #if DEBUG
     public class FrontSideBusController
-        #else
+#else
     internal class FrontSideBusController
 #endif
     {
@@ -31,7 +31,7 @@ namespace SystemBoard.Bus
             set
             {
                 _address = value;
-                busCycle = 0;
+                busCycle = 1;
             }
         }
         public byte Data { get; set; }
@@ -44,11 +44,12 @@ namespace SystemBoard.Bus
         public bool Hold
         {
             get => _hold;
-            set {
+            set
+            {
                 if (value)
                     while (S02 != BusState.passive || Lock) ;
                 _hold = value;
-                if(_hold)
+                if (_hold)
                     do_hold();
             }
         }
@@ -63,7 +64,7 @@ namespace SystemBoard.Bus
 
             dmaController.RegisterFrontSideBusController(this);
 
-            busCycle = -1;
+            busCycle = 0;
             timer.TockEvent += OnTockEvent;
         }
 
@@ -76,43 +77,40 @@ namespace SystemBoard.Bus
 
         protected void OnTockEvent(object sender, TimerEventArgs e)
         {
-            if (busCycle < 0)
+            if (busCycle < 1)
                 return;
 
             switch (S02)
             {
                 case BusState.instructionFetch:
                 case BusState.readMemory:
-                    if (busCycle == 0)
+                    if (busCycle == 1)
                         Data = memoryBusController.Read(_address);
-                    else if (busCycle == 2)
-                        Data = 0;
                     break;
                 case BusState.writeMemory:
-                    if (busCycle == 0)
+                    if (busCycle == 2)
                         memoryBusController.Write(_address, Data);
-                    else if (busCycle == 2)
-                        Data = 0;
                     break;
                 case BusState.readPort:
-                    if (busCycle == 0)
+                    if (busCycle == 1)
                         Data = ioBusController.Read(_address);
-                    else if (busCycle == 2)
-                        Data = 0;
                     break;
                 case BusState.writePort:
-                    if (busCycle == 0)
+                    if (busCycle == 2)
                         ioBusController.Write(_address, Data);
-                    else if (busCycle == 2)
-                        Data = 0;
                     break;
                 default:
                     break;
             }
-            if (busCycle < 2)
+            if (busCycle < 4)
+            {
                 busCycle++;
+            }
             else
+            {
+                Data = 0;
                 busCycle = -1;
+            }
         }
     }
 }
