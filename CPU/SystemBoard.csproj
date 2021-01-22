@@ -44,7 +44,7 @@
     <Compile Include="Bus\IOBusController.cs" />
     <Compile Include="Bus\MemoryBusController.cs" />
     <Compile Include="Bus\PortReadEventArgs.cs" />
-    <Compile Include="i8088\BusState.cs" />
+    <Compile Include="Bus\BusState.cs" />
     <Compile Include="i8088\FlagChangeEventArgs.cs" />
     <Compile Include="i8088\GeneralRegisterChangeEventArgs.cs" />
     <Compile Include="Bus\FrontSideBusController.cs" />
