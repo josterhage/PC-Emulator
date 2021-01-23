@@ -24,17 +24,17 @@ namespace SystemBoard.Bus
 
         public byte Read(int location)
         {
-            //TODO: make this generate an NMI
+            //silently fail
             if (memoryMap[location] == null)
-                throw new InvalidOperationException();
+                return 0;
             return memoryMap[location].Read(location);
         }
 
         public void Write(int location, byte value)
         {   
-            //TODO: make this generate an NMI
+            //silently fail
             if (memoryMap[location] == null)
-                throw new InvalidOperationException();
+                return;
             memoryMap[location].Write(location, value);
             MemoryChangeEvent?.Invoke(this, new MemoryChangeEventArgs(location, value));
         }
