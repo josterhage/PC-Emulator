@@ -43,6 +43,8 @@ namespace SystemBoard.i8237
         public bool DREQ3 { private get; set; }
         public bool DACK3 { get; private set; }
 
+        public bool EOP { get; set; }
+
         private int activeDreq;
 
         // the pages are the MSBs required for each DMA channel to address 1mb
@@ -188,7 +190,10 @@ namespace SystemBoard.i8237
             }
         }
 
-        public DmaController() { }
+        public DmaController()
+        {
+            timer.TockEvent += on_tock;
+        }
 
         public void RegisterFrontSideBusController(FrontSideBusController frontSideBusController)
         {
@@ -207,40 +212,169 @@ namespace SystemBoard.i8237
 
         private void on_tock(object sender, TimerEventArgs e)
         {
+            int xferMode = cycleState > 0 ? (modes[activeDreq] & transferMode) >> 6 : -1;
+            bool increment = cycleState > 0 && (modes[activeDreq] & transferIncrementDecrement) != 0;
+            bool autoinit = cycleState > 0 && (modes[activeDreq] & autoInit) != 0;
+            int readwriteverify = cycleState > 0 ? (modes[activeDreq] & verWriteRead) >> 2 : -1;
+            bool memtomem = cycleState > 0 && activeDreq == 0 && ((command & 1) != 0);
+            byte tcMask = (byte)(cycleState > 0 && activeDreq >= 0 ? 1 << activeDreq : 0);
+            byte reqMask = (byte)(cycleState > 0 && activeDreq >= 0 ? 1 << (activeDreq + 4) : 0);
+
+            int a; // throwaway for polling drqs
+
             switch (cycleState)
             {
+                case -1:
+                    cycleState++;
+                    return;
                 case 0:
                     //poll the DRQ lines
                     activeDreq = poll_drq();
                     if (activeDreq < 0)
                         return;
 
+                    status |= (byte)(1 << (activeDreq + 4));
+
+                    if (masks[activeDreq])
+                    {
+                        activeDreq = -1;
+                        return;
+                    }
+
                     frontSideBusController.Hold = true;
 
                     while (!_hlda) ;
 
-                    cycleState = 1;
-                    break;
+                    cycleState = memtomem ? 11 : 1;
+                    return;
+                //setup bus for transfer and send appropriate dack
                 case 1:
-                    // functional priority: single, block, demand, cascade
-                    switch ((modes[activeDreq] & transferMode) >> 6)
+                    //ensure the DREQ line is still active, clear the DREQ init and release the bus if it isn't
+                    a = poll_drq();
+                    if (a != activeDreq)
                     {
-                        //demand transfer mode
-                        case 0:
-                            break;
-                        //single transfer mode
-                        case 1:
-                            break;
-                        //block transfer mode
-                        case 2:
-                            break;
-                        // cascade mode
-                        case 3:
-                            break;
-                        default:
-                            throw new InvalidOperationException();
+                        deactivate();
+                        return;
                     }
-                    break;
+                    // functional priority: single, block, demand, cascade
+                    if (xferMode < 3)
+                    {
+                        //verify or read
+                        if ((readwriteverify & 1) == 0)
+                        {
+                            frontSideBusController.S02 = BusState.readMemory;
+                        }
+                        //write
+                        else if (readwriteverify == 1)
+                        {
+                            frontSideBusController.S02 = BusState.writeMemory;
+                        }
+                        else
+                        {
+                            //TODO: dive into datasheet, is this really what sould happen?
+
+                            //this attempts to recover in the event bad "hardware" really borqs things up
+                            status &= (byte)(0xff ^ (1 << (activeDreq + 4)));
+                            activeDreq = -1;
+                            cycleState = 0;
+                            _hlda = false;
+                            frontSideBusController.Hold = false;
+                            return;
+                        }
+
+                        //put the address on the bus, the actual 8237 does this over two clock cycles, low-byte first
+                        //since FrontSideBusController follows the clock cycling of an 8088 we don't have to cycle match here
+                        frontSideBusController.Address = (pages[activeDreq] << 16) | currentRegisters[activeDreq * 2];
+                        dack();
+                        cycleState++;
+                        return;
+                    }
+                    else if (xferMode == 3)
+                    {
+                        // in cascade mode we only need to let the slave 8237 know that it has control of the bus
+                        dack();
+                        cycleState++;
+                        return;
+                    }
+                    else
+                        throw new InvalidOperationException();
+                case 2:
+                    cycleState++;
+                    return;
+                case 3:
+                    cycleState++;
+                    return;
+                case 4:
+                    // decrement the word count register
+                    currentRegisters[(activeDreq * 2) + 1]--;
+
+                    // update the address register
+                    if (increment)
+                    {
+                        currentRegisters[activeDreq * 2]--;
+                    }
+                    else
+                    {
+                        currentRegisters[activeDreq * 2]++;
+                    }
+
+                    //terminal count
+                    if (currentRegisters[(activeDreq * 2) + 1] == 0xffff)
+                    {
+                        //set tc
+                        status |= tcMask;
+                    }
+
+                    //I assume based on the data sheet that nothing happens after a terminal count if autoinit and EOP are false
+                    if (((status & tcMask) != 0) && !EOP)
+                    {
+                        if (!autoinit)
+                            return;
+
+                        EOP = true;
+                    } 
+
+                    if (EOP)
+                    {
+                        currentRegisters[activeDreq * 2] = baseRegisters[activeDreq * 2];
+                        currentRegisters[(activeDreq * 2) + 1] = baseRegisters[(activeDreq * 2) + 1];
+                        deactivate();
+                        return;
+                    }
+
+                    if(xferMode == 0)
+                    {
+                        a = poll_drq();
+                        //in demand mode we return control to the bus if DREQ goes low before cycle four begins
+                        if (a != activeDreq)
+                        {
+                            deactivate();
+                            return;
+                        }
+                        cycleState = 1;
+                        return;
+                    }
+
+                    if(xferMode == 1)
+                    {
+                        deactivate();
+                        cycleState = -1; // wait one clock cycle before polling DREQ lines to ensure the processor can execute at least one instruction cycle
+                        return;
+                    }
+
+                    if(xferMode == 2)
+                    {
+                        cycleState = 1;
+                        return;
+                    }
+
+                    if(xferMode == 3)
+                    {
+                        cycleState = 0; /// ???
+                    }
+
+                    return;
+
             }
         }
 
@@ -255,6 +389,27 @@ namespace SystemBoard.i8237
             if (DREQ3)
                 return 3;
             return -1;
+        }
+
+        private void dack()
+        {
+            if (DREQ0)
+                DACK0 = true;
+            if (DREQ1)
+                DACK1 = true;
+            if (DREQ2)
+                DACK2 = true;
+            if (DREQ3)
+                DACK3 = true;
+        }
+
+        private void deactivate()
+        {
+            status = 0;
+            activeDreq = -1;
+            cycleState = 0;
+            _hlda = false;
+            frontSideBusController.Hold = false;
         }
     }
 }
