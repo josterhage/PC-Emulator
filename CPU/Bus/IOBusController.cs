@@ -25,8 +25,9 @@ namespace SystemBoard.Bus
 
         public byte Read(int port)
         {
+            //silently fail
             if (ioMap[port] == null)
-                throw new InvalidOperationException();
+                return 0;
             byte value = ioMap[port].Read(port);
             PortReadEvent?.Invoke(this, new PortEventArgs(port, value));
             return value;
@@ -34,8 +35,9 @@ namespace SystemBoard.Bus
 
         public void Write(int port, byte value)
         {
+            //silently fail
             if (ioMap[port] == null)
-                throw new InvalidOperationException();
+                return;
             PortWriteEvent?.Invoke(this, new PortEventArgs(port, value));
             ioMap[port].Write(port, value);
         }
