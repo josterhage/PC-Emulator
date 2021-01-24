@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using SystemBoard.Bus;
 using SystemBoard.SystemClock;
 
+//TODO: software shouldn't be able to set certain combinations of options, add logic to prevent it from doing so
+
 namespace SystemBoard.i8237
 {
     public class DmaController : IMemoryLocation
@@ -67,9 +69,7 @@ namespace SystemBoard.i8237
 
         private readonly bool[] masks = new bool[4];
 
-        private ushort tempAddress;
-        private ushort tempWord;
-
+        
         private byte status;
         private byte command;
         private byte temp;
@@ -154,8 +154,6 @@ namespace SystemBoard.i8237
                     case 13:
                         command = 0;
                         temp = 0;
-                        tempAddress = 0;
-                        tempWord = 0;
                         for (int i = 0; i < 4; i++)
                         {
                             requests[i] = false;
@@ -256,7 +254,6 @@ namespace SystemBoard.i8237
                         deactivate();
                         return;
                     }
-                    // functional priority: single, block, demand, cascade
                     if (xferMode < 3)
                     {
                         //verify or read
@@ -299,8 +296,6 @@ namespace SystemBoard.i8237
                     else
                         throw new InvalidOperationException();
                 case 2:
-                    cycleState++;
-                    return;
                 case 3:
                     cycleState++;
                     return;
@@ -370,11 +365,164 @@ namespace SystemBoard.i8237
 
                     if(xferMode == 3)
                     {
-                        cycleState = 0; /// ???
+                        //this isn't necessary for a 5150, but if i decide to mod this to emulate the AT it will be
+                        a = poll_drq();
+                        
+                        if (a != activeDreq)
+                        {
+                            deactivate();
+                            cycleState = -1; //ensure the CPU can perform one full fetch/execute cycle
+                            return;
+                        }
+
+                        cycleState = 1;
+                        return;
                     }
 
                     return;
+                
+                case 11:
+                    //ensure the DREQ line is still active, cleare DREQ init and release the bus if it isn't
+                    a = poll_drq();
+                    if(a != 0)
+                    {
+                        deactivate();
+                        return;
+                    }
 
+                    if(xferMode < 3)
+                    {
+                        frontSideBusController.Address = (pages[0] << 16) | currentRegisters[0];
+                        cycleState++;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    return;
+                case 12:
+                    temp = frontSideBusController.Data;
+                    cycleState++;
+                    break;
+                case 13:
+                    cycleState++;
+                    return;
+                case 14:
+                    // the datasheet says channel 0 "can be programmed to retain the same address for all channels"
+                    // how do I do that?
+
+                    // this is *a* way, not sure if it's what intel did
+                    currentRegisters[1]--;
+
+                    if(currentRegisters[1] != 0xffff)
+                    {
+                        if (increment)
+                        {
+                            currentRegisters[0]--;
+                        }
+                        else
+                        {
+                            currentRegisters[1]++;
+                        }
+                    }
+                    else
+                    {
+                        //ensures this trick keeps working
+                        currentRegisters[1]++;
+                    }
+
+                    //we only care about external EOP for mem-to-mem
+                    if (EOP)
+                    {
+                        currentRegisters[0] = baseRegisters[0];
+                        currentRegisters[1] = baseRegisters[1];                        
+                    }
+
+                    cycleState = 21;
+                    return;
+
+                case 21:
+                    if(xferMode < 3)
+                    {
+                        frontSideBusController.Address = (pages[1] << 16) | currentRegisters[1];
+                        frontSideBusController.Data = temp;
+                        cycleState++;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    return;
+                case 22:
+                case 23:
+                    cycleState++;
+                    return;
+                case 24:
+                    currentRegisters[3]--;
+
+                    if (increment)
+                    {
+                        currentRegisters[2]--;
+                    }
+                    else
+                    {
+                        currentRegisters[2]++;
+                    }
+
+                    if(currentRegisters[3] == 0xffff)
+                    {
+                        status |= tcMask;
+                    }
+
+                    if (((status & tcMask) !=0) && !EOP)
+                    {
+                        if (!autoinit)
+                            return;
+
+                        EOP = true;
+                    }
+
+                    if (EOP)
+                    {
+                        //ensure both channels are reset
+                        for(int i =0; i < 4; i++)
+                        {
+                            currentRegisters[i] = baseRegisters[i];
+                        }
+
+                        deactivate();
+                        return;
+                    }
+
+                    if(xferMode == 0)
+                    {
+                        a = poll_drq();
+                        if(a != 0)
+                        {
+                            deactivate();
+                            return;
+                        }
+                        cycleState = 11;
+                        return;
+                    }
+
+                    if(xferMode == 1)
+                    {
+                        deactivate();
+                        cycleState = -1;
+                        return;
+                    }
+
+                    if(xferMode == 2)
+                    {
+                        cycleState = 11;
+                        return;
+                    }
+
+                    if (xferMode > 2)
+                        throw new InvalidOperationException();
+                    
+                    return;
             }
         }
 
@@ -409,6 +557,8 @@ namespace SystemBoard.i8237
             activeDreq = -1;
             cycleState = 0;
             _hlda = false;
+            EOP = false;
+            frontSideBusController.S02 = BusState.passive;
             frontSideBusController.Hold = false;
         }
     }
