@@ -318,7 +318,9 @@ namespace SystemBoard.i8088
 
         private void on_tock_event(object sender, TimerEventArgs e)
         {
-            if (e.Ready && !fbc.Hold)
+            while (fbc.Hold) ;
+
+            if (e.Ready)
             {
                 tState = nextState;
             }
