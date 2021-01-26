@@ -58,6 +58,7 @@
     <Compile Include="i8237\DmaController.cs" />
     <Compile Include="i8237\PageRegister.cs" />
     <Compile Include="i8237\PageRegisterChangeEventArgs.cs" />
+    <Compile Include="i8253\ProgrammableTimer.cs" />
     <Compile Include="i8255\PeripheralInterface.cs" />
     <Compile Include="i8259\InterruptController.cs" />
     <Compile Include="Bus\IMemoryLocation.cs" />
