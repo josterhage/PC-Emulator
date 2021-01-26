@@ -79,8 +79,7 @@ namespace SystemBoard.i8237
         private const byte transferIncrementDecrement = 0x20;
         private const byte autoInit = 0x10;
         private const byte verWriteRead = 0x0c;
-        private const byte channel = 0x03;
-
+        
         public byte Read(int location)
         {
             if (cycleState > 0)
